@@ -1,0 +1,17 @@
+name: Build, deploy dev feature
+
+on:
+  push:
+    branches-ignore:
+      - main
+
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    uses: navikt/dok-workflows/.github/workflows/build-deploy-feature-gar.yml@main
+    secrets: inherit
+    with:
+      nav-cluster: 'dev-gcp'
