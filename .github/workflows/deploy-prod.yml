@@ -12,5 +12,3 @@ jobs:
       id-token: write
     uses: navikt/dok-workflows/.github/workflows/deploy-prod-gar.yml@main
     secrets: inherit
-    with:
-      nav-cluster: 'prod-gcp'
