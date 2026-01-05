@@ -25,6 +25,9 @@
 		<java.version>25</java.version>
 
 		<logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
+		<guava.version>33.5.0-jre</guava.version>
+
+		<wiremock-spring-boot.version>4.0.8</wiremock-spring-boot.version>
 	</properties>
 
 	<dependencyManagement>
@@ -44,6 +47,18 @@
 				<groupId>net.logstash.logback</groupId>
 				<artifactId>logstash-logback-encoder</artifactId>
 				<version>${logstash-logback-encoder.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>${guava.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.wiremock.integrations</groupId>
+				<artifactId>wiremock-spring-boot</artifactId>
+				<version>${wiremock-spring-boot.version}</version>
+				<scope>test</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

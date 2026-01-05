@@ -1,0 +1,56 @@
+{
+  "data": {
+    "hentPersonBolk": [
+      {
+        "ident": "2556016505784",
+        "person": {
+          "doedsfall": [
+            {
+              "doedsdato": "1900-11-03"
+            }
+          ],
+          "folkeregisteridentifikator": [
+            {
+              "identifikasjonsnummer": "07417813777",
+              "status": "I_BRUK",
+              "type": "FNR"
+            }
+          ]
+        },
+        "code": "ok"
+      },
+      {
+        "ident": "2376241635675",
+        "person": {
+          "doedsfall": [
+            {
+              "doedsdato": "1900-11-03"
+            }
+          ],
+          "folkeregisteridentifikator": [
+            {
+              "identifikasjonsnummer": "25429233464",
+              "status": "I_BRUK",
+              "type": "FNR"
+            }
+          ]
+        },
+        "code": "ok"
+      },
+      {
+        "ident": "2425192326667",
+        "person": {
+          "doedsfall": [],
+          "folkeregisteridentifikator": [
+            {
+              "identifikasjonsnummer": "26458714893",
+              "status": "I_BRUK",
+              "type": "FNR"
+            }
+          ]
+        },
+        "code": "ok"
+      }
+    ]
+  }
+}
