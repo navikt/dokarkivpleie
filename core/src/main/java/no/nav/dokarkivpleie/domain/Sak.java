@@ -9,7 +9,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -18,6 +20,8 @@ import java.time.LocalDateTime;
  * Inneholder metadata om sakstilknytningen til fagsystemet.
  */
 @Entity
+@Getter
+@Setter
 @Builder
 @Table(name = "SAK")
 @NoArgsConstructor
@@ -84,5 +88,11 @@ public class Sak {
 
 	@Column(name = "doedsdato")
 	private LocalDate doedsdato;
+
+	@Column(name = "bruker_id")
+	private String brukerId;
+
+	@Column(name = "k_bruker_id_t")
+	private String brukerIdType;
 
 }

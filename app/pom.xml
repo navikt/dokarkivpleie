@@ -15,6 +15,10 @@
 	<dependencies>
 		<dependency>
 			<groupId>no.nav.dokarkivpleie</groupId>
+			<artifactId>core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>no.nav.dokarkivpleie</groupId>
 			<artifactId>skass001</artifactId>
 		</dependency>
 	</dependencies>
