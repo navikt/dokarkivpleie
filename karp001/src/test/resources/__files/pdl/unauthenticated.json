@@ -1,0 +1,23 @@
+{
+  "errors": [
+    {
+      "message": "Ikke gyldig token",
+      "locations": [
+        {
+          "line": 2,
+          "column": 5
+        }
+      ],
+      "path": [
+        "hentIdenter"
+      ],
+      "extensions": {
+        "code": "unauthenticated",
+        "classification": "ExecutionAborted"
+      }
+    }
+  ],
+  "data": {
+    "hentIdenter": null
+  }
+}

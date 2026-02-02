@@ -1,0 +1,23 @@
+{
+  "errors": [
+    {
+      "message": "Gyldig, men feil type token eller ikke tilgang til tjenesten.",
+      "locations": [
+        {
+          "line": 2,
+          "column": 5
+        }
+      ],
+      "path": [
+        "hentIdenter"
+      ],
+      "extensions": {
+        "code": "unauthorized",
+        "classification": "ExecutionAborted"
+      }
+    }
+  ],
+  "data": {
+    "hentIdenter": null
+  }
+}

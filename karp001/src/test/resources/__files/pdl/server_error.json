@@ -1,0 +1,23 @@
+{
+  "errors": [
+    {
+      "message": "Ukjent problem oppsto, feilen har blitt logget og følges opp",
+      "locations": [
+        {
+          "line": 2,
+          "column": 5
+        }
+      ],
+      "path": [
+        "hentIdenter"
+      ],
+      "extensions": {
+        "code": "server_error",
+        "classification": "ExecutionAborted"
+      }
+    }
+  ],
+  "data": {
+    "hentIdenter": null
+  }
+}
