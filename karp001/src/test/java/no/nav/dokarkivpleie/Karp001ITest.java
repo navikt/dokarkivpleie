@@ -45,6 +45,7 @@ public class Karp001ITest extends AbstractKafkaBrokerTest {
 	private static final String AKTOERID_1 = "2556016505784";
 	private static final String AKTOERID_2 = "1556016505799";
 	private static final String AKTOERID_3 = "0556016505799";
+	private static final String NPID = "17629124853";
 	private static final String ENDRET_AV = "OppdaterSakerMedDoedsdatoOgFnr";
 	private static final String FNR = "FNR";
 
@@ -82,6 +83,25 @@ public class Karp001ITest extends AbstractKafkaBrokerTest {
 			assertThat(sakSomIkkeErOppdatert)
 					.extracting(Sak::getDoedsdato, Sak::getBrukerId, Sak::getBrukerIdType, Sak::getEndretAv, Sak::getDatoEndret)
 					.containsOnlyNulls();
+		});
+	}
+
+	@Test
+	void skalOppdatereFoedselsnummerOgDoedsdatoForEndringstypeOpprettForNPID() {
+		lagSaker();
+		stubNaisTexasToken();
+		stubPdl("npid_uten_nyeste_fnr.json");
+
+		Personhendelse personhendelse = lagLeesahDoedsfallHendelse(List.of(AKTOERID_1), DOEDSDATO);
+
+		kafkaTemplate.send(LEESAH_KAFKA_TOPIC, "key-456", personhendelse);
+
+		await().atMost(5, SECONDS).untilAsserted(() -> {
+			Sak oppdatertSak = sakRepository.findById(123L).orElseThrow();
+			assertThat(oppdatertSak)
+					.extracting(Sak::getBrukerId, Sak::getBrukerIdType, Sak::getDoedsdato, Sak::getEndretAv)
+					.containsExactly(NPID, FNR, DOEDSDATO, ENDRET_AV);
+			verify(1, postRequestedFor(urlEqualTo("/pdl")));
 		});
 	}
 
@@ -207,10 +227,10 @@ public class Karp001ITest extends AbstractKafkaBrokerTest {
 	}
 
 	@Test
-	void skalAvslutteProsesseringNaarNyesteFnrManglerForNpid() {
+	void skalAvslutteHvisIngenFnrEllerNpidFraPdl() {
 		lagSaker();
 		stubNaisTexasToken();
-		stubPdl("npid_uten_nyeste_fnr.json");
+		stubPdl("kun_aktoerid.json");
 
 		Personhendelse personhendelse = lagLeesahDoedsfallHendelse(List.of(AKTOERID_1), DOEDSDATO);
 

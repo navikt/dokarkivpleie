@@ -72,7 +72,7 @@ public class PdlConsumer {
 		return PdlRequest.builder()
 				.query("""
 						query hentIdenter($ident: ID!) {
-						  hentIdenter(ident: $ident, grupper: [FOLKEREGISTERIDENT, AKTORID], historikk: true) {
+						  hentIdenter(ident: $ident, grupper: [FOLKEREGISTERIDENT, AKTORID, NPID], historikk: true) {
 						    identer {
 						      ident
 						      gruppe

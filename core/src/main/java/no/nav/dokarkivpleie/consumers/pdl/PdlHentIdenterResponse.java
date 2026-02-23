@@ -7,6 +7,7 @@ import java.util.List;
 
 import static no.nav.dokarkivpleie.consumers.pdl.PdlHentIdenterResponse.PdlGruppe.AKTORID;
 import static no.nav.dokarkivpleie.consumers.pdl.PdlHentIdenterResponse.PdlGruppe.FOLKEREGISTERIDENT;
+import static no.nav.dokarkivpleie.consumers.pdl.PdlHentIdenterResponse.PdlGruppe.NPID;
 
 public record PdlHentIdenterResponse(
 		PdlHentIdenter data,
@@ -27,9 +28,18 @@ public record PdlHentIdenterResponse(
 
 	public record PdlIdenter(List<PdlIdent> identer) {
 
-		public String nyesteFnr() {
+		public String nyesteFnrEllerNpid() {
 			return identer.stream()
 					.filter(ident -> FOLKEREGISTERIDENT == ident.gruppe())
+					.filter(ident -> !ident.historisk())
+					.findFirst()
+					.map(PdlIdent::ident)
+					.orElse(nyesteNPID());
+		}
+
+		private String nyesteNPID() {
+			return identer.stream()
+					.filter(ident -> NPID == ident.gruppe())
 					.filter(ident -> !ident.historisk())
 					.findFirst()
 					.map(PdlIdent::ident)

@@ -44,13 +44,13 @@ public class Karp001Service {
 			case OPPRETTET, KORRIGERT -> {
 				PdlIdenter identer = pdlConsumer.hentAlleIdenterForIdent(hentFoersteIdentFraPersonhendelse(personhendelse));
 
-				String nyesteFnr  = identer.nyesteFnr();
-				if (nyesteFnr == null) {
-					log.info("Hendelse med opplysningstype={} og hendelseId={} mangler nyeste FNR i PDL. Dette gjelder som regel personer med NPID. Ignorerer hendelse.", personhendelse.getOpplysningstype(), personhendelse.getHendelseId());
+				String nyesteFnrEllerNpid  = identer.nyesteFnrEllerNpid();
+				if (nyesteFnrEllerNpid == null) {
+					log.info("Hendelse med opplysningstype={} og hendelseId={} mangler nyeste FNR eller NPID i PDL. Ignorerer hendelse.", personhendelse.getOpplysningstype(), personhendelse.getHendelseId());
 					return;
 				}
 
-				int antallRaderOppdatert = sakRepository.oppdaterFoedselsnummerOgDoedsdatoForAktoerIder(identer.aktoerIder(), nyesteFnr, personhendelse.getDoedsfall().getDoedsdato());
+				int antallRaderOppdatert = sakRepository.oppdaterFoedselsnummerOgDoedsdatoForAktoerIder(identer.aktoerIder(), nyesteFnrEllerNpid, personhendelse.getDoedsfall().getDoedsdato());
 				loggDatabaseoppdatering(antallRaderOppdatert, personhendelse);
 			}
 			case ANNULLERT -> {
