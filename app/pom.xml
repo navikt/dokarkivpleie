@@ -25,6 +25,10 @@
 			<groupId>no.nav.dokarkivpleie</groupId>
 			<artifactId>karp001</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>no.nav.dokarkivpleie</groupId>
+			<artifactId>leesah</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

@@ -24,10 +24,6 @@ import org.wiremock.spring.EnableWireMock;
 @EmbeddedKafka(topics = "pdl.leesah-v1")
 public abstract class AbstractKafkaBrokerTest {
 
-	@Autowired
-	@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-	public EmbeddedKafkaBroker kafkaEmbedded;
-
 	protected void reinitTransaction() {
 		TestTransaction.flagForCommit();
 		TestTransaction.end();

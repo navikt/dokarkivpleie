@@ -20,6 +20,7 @@
 		<module>core</module>
 		<module>skass001</module>
 		<module>karp001</module>
+		<module>leesah</module>
 	</modules>
 
 	<repositories>
@@ -55,6 +56,11 @@
 			<dependency>
 				<groupId>no.nav.dokarkivpleie</groupId>
 				<artifactId>karp001</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>no.nav.dokarkivpleie</groupId>
+				<artifactId>leesah</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 

@@ -37,6 +37,7 @@ class SakRepositoryTest {
 	private static final String TEMA_BIL = "BIL";
 	private static final String ENDRET_AV_SKASS001 = "MerkSakerBevaringstidPassert";
 	private static final String ENDRET_AV_KARP001 = "OppdaterSakerMedDoedsdatoOgFnr";
+	private static final String ENDRET_KILDE_NAVN_DOKARKIVPLEIE = "dokarkivpleie";
 
 	private long sakIdCounter = 100L;
 
@@ -183,6 +184,7 @@ class SakRepositoryTest {
 		assertThat(sak.getBrukerIdType()).isEqualTo(BRUKERIDTYPE);
 		assertThat(sak.getBrukerId()).isEqualTo(BRUKERID_FNR);
 		assertThat(sak.getEndretAv()).isEqualTo(endretAv);
+		assertThat(sak.getEndretKildeNavn()).isEqualTo(ENDRET_KILDE_NAVN_DOKARKIVPLEIE);
 		assertThat(sak.getDatoEndret()).isCloseTo(LocalDateTime.now(), within(10, SECONDS));
 	}
 
