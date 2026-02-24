@@ -27,6 +27,29 @@ public interface SakRepository extends JpaRepository<Sak, Long> {
 		set sak.brukerIdType = 'FNR',
 			sak.brukerId = :foedselsnummer,
 		    sak.doedsdato = :doedsdato,
+			sak.endretAv = 'OppdaterSakerMedDoedsdatoOgFnr',
+			sak.datoEndret = current_timestamp
+		where sak.aktoerId in (:aktoerIder)
+	""")
+	int oppdaterFoedselsnummerOgDoedsdatoForAktoerIder(List<String> aktoerIder, String foedselsnummer, LocalDate doedsdato);
+
+	@Modifying
+	@Query("""
+		update Sak sak
+		set sak.doedsdato = null,
+			sak.endretAv = 'OppdaterSakerMedDoedsdatoOgFnr',
+			sak.datoEndret = current_timestamp
+		where sak.aktoerId in (:aktoerIder)
+			and sak.doedsdato is not null
+	""")
+	int annullerDoedsdatoForAktoerIder(List<String> aktoerIder);
+
+	@Modifying
+	@Query("""
+		update Sak sak
+		set sak.brukerIdType = 'FNR',
+			sak.brukerId = :foedselsnummer,
+		    sak.doedsdato = :doedsdato,
 			sak.endretAv = 'MerkSakerBevaringstidPassert',
 			sak.datoEndret = current_timestamp
 		where sak.aktoerId = :aktoerId
@@ -51,5 +74,4 @@ public interface SakRepository extends JpaRepository<Sak, Long> {
 			and sak.kassasjonsstatus is null
 	""")
 	Set<Sak> finnUkasserteSakerForBrukere(List<String> brukerId, String tema);
-
 }

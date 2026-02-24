@@ -1,5 +1,6 @@
 {
   "DOKARKIVPLEIE_ENDPOINTS_DATAVAREHUS_URL": "https://dvh.adeo.no/ords/dvh/dt_kodeverk/dim_org",
   "DOKARKIVPLEIE_ENDPOINTS_PDL_URL": "https://pdl-api.intern.nav.no/graphql",
-  "DOKARKIVPLEIE_ENDPOINTS_PDL_SCOPE": "api://prod-fss.pdl.pdl-api/.default"
+  "DOKARKIVPLEIE_ENDPOINTS_PDL_SCOPE": "api://prod-fss.pdl.pdl-api/.default",
+  "DOKARKIVPLEIE_KAFKA_POOL": "nav-prod"
 }

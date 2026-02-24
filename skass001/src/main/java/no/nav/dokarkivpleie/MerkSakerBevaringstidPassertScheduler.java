@@ -19,7 +19,8 @@ public class MerkSakerBevaringstidPassertScheduler {
 		this.merkSakerBevaringstidPassertService = merkSakerBevaringstidPassertService;
 	}
 
-	@Scheduled(initialDelay = 10000L)
+	//TODO: Skru på scheduled når vi er ferdige med karp001
+	//@Scheduled(initialDelay = 10000L)
 	public void kjoerPeriodiskJobb() {
 		log.info("Starter periodisk jobb for å markere saker der bevaringstid har passert for tema={}.", TEMA_MED_STOETTEDE_BEVARINGSTIDER);
 

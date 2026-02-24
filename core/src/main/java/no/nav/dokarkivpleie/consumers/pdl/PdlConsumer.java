@@ -3,6 +3,7 @@ package no.nav.dokarkivpleie.consumers.pdl;
 import lombok.extern.slf4j.Slf4j;
 import no.nav.dokarkivpleie.config.DokarkivpleieProperties;
 import no.nav.dokarkivpleie.consumers.pdl.HentPersonBolkResponse.HentPersonBolk;
+import no.nav.dokarkivpleie.consumers.pdl.PdlHentIdenterResponse.PdlIdenter;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.resilience.annotation.Retryable;
 import org.springframework.stereotype.Component;
@@ -40,6 +41,50 @@ public class PdlConsumer {
 		this.scopePdl = dokarkivpleieProperties.getEndpoints().getPdl().getScope();
 	}
 
+	@Retryable(value = PdlTechnicalException.class, maxRetriesString = "${retry.attempts:5}")
+	public PdlIdenter hentAlleIdenterForIdent(String ident) {
+		PdlHentIdenterResponse pdlResponse = restClientTexas.post()
+				.attribute(ENTRA_TARGET_SCOPE, scopePdl)
+				.body(mapHentAlleIdenterForAktoerId(ident))
+				.retrieve()
+				.onStatus(HttpStatusCode::isError, (_, res) -> {
+					if (res.getStatusCode().is4xxClientError()) {
+						throw new PdlFunctionalException(format("Klarte ikke hente aktoerIder fra PDL med statuskode=%s og feilmelding=%s", res.getStatusCode(), res.getStatusText()));
+					}
+					throw new PdlTechnicalException(format("Klarte ikke hente aktoerIder fra PDL med statuskode=%s og feilmelding=%s", res.getStatusCode(), res.getStatusText()));
+				})
+				.body(PdlHentIdenterResponse.class);
+
+		if (pdlResponse.errors() == null || pdlResponse.errors().isEmpty()) {
+			return pdlResponse.data().hentIdenter();
+		} else {
+			if (pdlResponse.erTekniskPdlFeil()) {
+				throw new PdlTechnicalException("PDL feiler internt ved innhenting av aktørider for folkeregisterident. " + pdlResponse.errors());
+			}
+			throw new PdlFunctionalException("Kunne ikke hente aktørider for folkeregisterident i PDL. " + pdlResponse.errors());
+		}
+	}
+
+	private PdlRequest mapHentAlleIdenterForAktoerId(String ident) {
+		HashMap<String, Object> variables = new HashMap<>();
+		variables.put("ident", ident);
+
+		return PdlRequest.builder()
+				.query("""
+						query hentIdenter($ident: ID!) {
+						  hentIdenter(ident: $ident, grupper: [FOLKEREGISTERIDENT, AKTORID, NPID], historikk: true) {
+						    identer {
+						      ident
+						      gruppe
+						      historisk
+						    }
+						  }
+						}
+						""")
+				.variables(variables)
+				.build();
+	}
+
 	@Retryable(value = PdlTechnicalException.class)
 	public List<HentPersonBolk> hentNyesteFnrOgDoedsdato(List<String> aktoerIder) {
 		HentPersonBolkResponse pdlResponse = restClientTexas.post()
@@ -55,10 +100,9 @@ public class PdlConsumer {
 				.body(HentPersonBolkResponse.class);
 
 		if (pdlResponse.errors() == null || pdlResponse.errors().isEmpty()) {
-			log.info("hentNyesteFnrOgDoedsdato har hentet svar fra PDL");
 			return pdlResponse.data().hentPersonBolk();
 		} else {
-			throw new PdlFunctionalException("Kunne ikke hente aktørider for folkeregisterident i pdl. " + pdlResponse.errors());
+			throw new PdlFunctionalException("Kunne ikke hente aktørider for folkeregisterident i PDL. " + pdlResponse.errors());
 		}
 	}
 

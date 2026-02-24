@@ -2,6 +2,7 @@ package no.nav.dokarkivpleie.repository;
 
 import no.nav.dokarkivpleie.config.RepositoryConfig;
 import no.nav.dokarkivpleie.domain.Sak;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
@@ -34,12 +35,20 @@ class SakRepositoryTest {
 	private static final LocalDate DOEDSDATO_UNDER_10_AAR = LocalDate.now().minusMonths(119);
 	private static final String TEMA_AAP = "AAP";
 	private static final String TEMA_BIL = "BIL";
-	private static final String ENDRET_AV = "MerkSakerBevaringstidPassert";
+	private static final String ENDRET_AV_SKASS001 = "MerkSakerBevaringstidPassert";
+	private static final String ENDRET_AV_KARP001 = "OppdaterSakerMedDoedsdatoOgFnr";
 
 	private long sakIdCounter = 100L;
 
 	@Autowired
 	SakRepository sakRepository;
+
+	@AfterEach
+	public void cleanUp() {
+		sakRepository.deleteAll();
+		commitAndBeginNewTransaction();
+	}
+
 
 	@Test
 	void skalFinneAktoeriderSomSkalFaaOppdatertFoedselsnummerOgDoedsdato() {
@@ -74,7 +83,7 @@ class SakRepositoryTest {
 		List<Sak> sakerSomSkalVaereOppdaterte = sakRepository.findAllById(List.of(relevantSak.getSakId(), sakMedAnnetTema.getSakId()));
 		List<Sak> sakerSomIkkeSkalVaereOppdaterte = sakRepository.findAllById(List.of(sakUtenAktoerId.getSakId(), sakMedFeilSaksstatus.getSakId()));
 
-		assertThat(sakerSomSkalVaereOppdaterte).allSatisfy(this::assertSakErOppdatert);
+		assertThat(sakerSomSkalVaereOppdaterte).allSatisfy(sak -> assertSakErOppdatert(sak, ENDRET_AV_SKASS001));
 		assertThat(sakerSomIkkeSkalVaereOppdaterte).allSatisfy(this::assertSakIkkeErOppdatert);
 	}
 
@@ -111,17 +120,69 @@ class SakRepositoryTest {
 				.containsExactly(relevantSak.getSakId());
 	}
 
+	@Test
+	void skalOppdatereFoedselsnummerOgDoedsdatoForAktoerIder() {
+		List<Sak> relevanteSaker = List.of(
+				createBaseSak(1L).aktoerId(AKTOER_ID1).build(),
+				createBaseSak(2L).aktoerId(AKTOER_ID2).build(),
+				createBaseSak(3L).aktoerId(AKTOER_ID2).doedsdato(LocalDate.now()).build(),
+				createBaseSak(4L).aktoerId(AKTOER_ID3).build()
+		);
+		sakRepository.saveAll(relevanteSaker);
+		commitAndBeginNewTransaction();
+
+		sakRepository.oppdaterFoedselsnummerOgDoedsdatoForAktoerIder(List.of(AKTOER_ID1, AKTOER_ID2), BRUKERID_FNR, DOEDSDATO);
+
+		List<Sak> sakerSomSkalVaereOppdaterte = sakRepository.findAllById(List.of(1L, 2L, 3L));
+		List<Sak> sakerSomIkkeSkalVaereOppdaterte = sakRepository.findAllById(List.of(4L));
+
+		assertThat(sakerSomSkalVaereOppdaterte).allSatisfy(sak -> assertSakErOppdatert(sak, ENDRET_AV_KARP001));
+		assertThat(sakerSomIkkeSkalVaereOppdaterte).allSatisfy(this::assertSakIkkeErOppdatert);
+	}
+
+	@Test
+	void skalAnnullereDoedsdatoForAktoerIder() {
+		List<Sak> relevanteSaker = List.of(
+				createBaseSak(1L).aktoerId(AKTOER_ID1).build(),
+				createBaseSak(2L).aktoerId(AKTOER_ID2).brukerIdType(BRUKERIDTYPE).brukerId(BRUKERID_FNR).doedsdato(LocalDate.now()).build(),
+				createBaseSak(3L).aktoerId(AKTOER_ID2).brukerIdType(BRUKERIDTYPE).brukerId(BRUKERID_FNR).doedsdato(LocalDate.now()).build()
+		);
+		sakRepository.saveAll(relevanteSaker);
+		commitAndBeginNewTransaction();
+
+		sakRepository.annullerDoedsdatoForAktoerIder(List.of(AKTOER_ID1, AKTOER_ID2));
+
+		List<Sak> sakerSomSkalVaereOppdaterte = sakRepository.findAllById(List.of(2L, 3L));
+		List<Sak> sakerSomIkkeSkalVaereOppdaterte = sakRepository.findAllById(List.of(1L));
+
+		assertThat(sakerSomSkalVaereOppdaterte).allSatisfy(sak -> assertDoedsdatoErAnnullert(sak, ENDRET_AV_KARP001));
+		assertThat(sakerSomIkkeSkalVaereOppdaterte).allSatisfy(this::assertSakIkkeErOppdatert);
+	}
+
 	private Sak.SakBuilder createBaseSak() {
+		return createBaseSak(sakIdCounter++);
+	}
+
+	private Sak.SakBuilder createBaseSak(Long id) {
 		return Sak.builder()
-				.sakId(sakIdCounter++)
+				.sakId(id)
 				.tema(TEMA_AAP);
 	}
 
-	private void assertSakErOppdatert(Sak sak) {
+	private void assertDoedsdatoErAnnullert(Sak sak, String endretAv) {
+		assertThat(sak.getDoedsdato()).isNull();
+		assertBaseSakErOppdatert(sak, endretAv);
+	}
+
+	private void assertSakErOppdatert(Sak sak, String endretAv) {
+		assertThat(sak.getDoedsdato()).isEqualTo(DOEDSDATO);
+		assertBaseSakErOppdatert(sak, endretAv);
+	}
+
+	private void assertBaseSakErOppdatert(Sak sak, String endretAv) {
 		assertThat(sak.getBrukerIdType()).isEqualTo(BRUKERIDTYPE);
 		assertThat(sak.getBrukerId()).isEqualTo(BRUKERID_FNR);
-		assertThat(sak.getDoedsdato()).isEqualTo(DOEDSDATO);
-		assertThat(sak.getEndretAv()).isEqualTo(ENDRET_AV);
+		assertThat(sak.getEndretAv()).isEqualTo(endretAv);
 		assertThat(sak.getDatoEndret()).isCloseTo(LocalDateTime.now(), within(10, SECONDS));
 	}
 

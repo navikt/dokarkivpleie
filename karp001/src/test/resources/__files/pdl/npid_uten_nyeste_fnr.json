@@ -1,0 +1,18 @@
+{
+  "data": {
+    "hentIdenter": {
+      "identer": [
+        {
+          "ident": "17629124853",
+          "historisk": false,
+          "gruppe": "NPID"
+        },
+        {
+          "ident": "2556016505784",
+          "historisk": false,
+          "gruppe": "AKTORID"
+        }
+      ]
+    }
+  }
+}
