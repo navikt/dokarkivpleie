@@ -28,6 +28,7 @@ public interface SakRepository extends JpaRepository<Sak, Long> {
 			sak.brukerId = :foedselsnummer,
 		    sak.doedsdato = :doedsdato,
 			sak.endretAv = 'OppdaterSakerMedDoedsdatoOgFnr',
+			sak.endretKildeNavn = 'dokarkivpleie',
 			sak.datoEndret = current_timestamp
 		where sak.aktoerId in (:aktoerIder)
 	""")
@@ -38,6 +39,7 @@ public interface SakRepository extends JpaRepository<Sak, Long> {
 		update Sak sak
 		set sak.doedsdato = null,
 			sak.endretAv = 'OppdaterSakerMedDoedsdatoOgFnr',
+			sak.endretKildeNavn = 'dokarkivpleie',
 			sak.datoEndret = current_timestamp
 		where sak.aktoerId in (:aktoerIder)
 			and sak.doedsdato is not null
@@ -51,6 +53,7 @@ public interface SakRepository extends JpaRepository<Sak, Long> {
 			sak.brukerId = :foedselsnummer,
 		    sak.doedsdato = :doedsdato,
 			sak.endretAv = 'MerkSakerBevaringstidPassert',
+			sak.endretKildeNavn = 'dokarkivpleie',
 			sak.datoEndret = current_timestamp
 		where sak.aktoerId = :aktoerId
 			and (sak.saksstatus is null or sak.saksstatus = 'AAPEN')

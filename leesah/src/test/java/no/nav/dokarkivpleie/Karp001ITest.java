@@ -285,14 +285,6 @@ public class Karp001ITest extends AbstractKafkaBrokerTest {
 		return Sak.builder().sakId(sakId).aktoerId(aktoerId).applikasjon("FS22").saksstatus(saksstatus);
 	}
 
-	private void lagSakerSomErPopulertMedDoedsdatoOgFnr() {
-		sakRepository.saveAll(List.of(
-				Sak.builder().sakId(123L).aktoerId(AKTOERID_1).applikasjon("FS22").saksstatus(AAPEN).doedsdato(DOEDSDATO).brukerId(FNR_FOR_AKTOERID_1_OG_2).brukerIdType(FNR).build(),
-				Sak.builder().sakId(124L).aktoerId(AKTOERID_2).applikasjon("FS22").saksstatus(AAPEN).doedsdato(DOEDSDATO).brukerId(FNR_FOR_AKTOERID_1_OG_2).brukerIdType(FNR).build()
-		));
-		reinitTransaction();
-	}
-
 	void stubPdl(String filename) {
 		stubFor(post(urlEqualTo("/pdl"))
 				.willReturn(aResponse()

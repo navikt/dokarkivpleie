@@ -4,20 +4,18 @@ import lombok.extern.slf4j.Slf4j;
 import no.nav.dokarkivpleie.consumers.pdl.PdlConsumer;
 import no.nav.dokarkivpleie.consumers.pdl.PdlHentIdenterResponse.PdlIdenter;
 import no.nav.dokarkivpleie.repository.SakRepository;
-import no.nav.person.pdl.leesah.Personhendelse;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-import static no.nav.dokarkivpleie.PersonhendelseValidator.validerPersonhendelse;
+import static no.nav.dokarkivpleie.DoedsfallhendelseValidator.validerDoedsfall;
 
 @Slf4j
 @Service
 public class Karp001Service {
 
-	private static final String OPPLYSNINGSTYPE_DOEDSFALL = "DOEDSFALL_V1";
+	public static final String OPPLYSNINGSTYPE_DOEDSFALL = "DOEDSFALL_V1";
+
 	private final SakRepository sakRepository;
 	private final PdlConsumer pdlConsumer;
 
@@ -26,60 +24,35 @@ public class Karp001Service {
 		this.pdlConsumer = pdlConsumer;
 	}
 
-	@Transactional
-	@KafkaListener(
-			topics = "pdl.leesah-v1",
-			groupId = "dokarkivpleie-karp001"
-	)
-	public void lesPersonhendelserFraLeesah(Personhendelse personhendelse) {
-		if (!erHendelseEtDoedsfall(personhendelse)) {
-			loggIgnorertHendelse(personhendelse);
-			return;
-		}
+	public void behandleDoedsfallhendelseFraLeesah(Doedsfallhendelse doedsfall) {		;
+		log.info("Doedsfall-hendelse med endringstype={} og hendelseId={} mottatt.", doedsfall.endringstype(), doedsfall.hendelseId());
+		validerDoedsfall(doedsfall);
 
-		log.info("Hendelse med opplysningstype={}, endringstype={}, hendelseId={} mottatt.", personhendelse.getOpplysningstype(), personhendelse.getEndringstype(), personhendelse.getHendelseId());
-		validerPersonhendelse(personhendelse);
-
-		switch (personhendelse.getEndringstype()) {
+		switch (doedsfall.endringstype()) {
 			case OPPRETTET, KORRIGERT -> {
-				PdlIdenter identer = pdlConsumer.hentAlleIdenterForIdent(hentFoersteIdentFraPersonhendelse(personhendelse));
+				PdlIdenter identer = pdlConsumer.hentAlleIdenterForIdent(doedsfall.foerstePersonident());
 
-				String nyesteFnrEllerNpid  = identer.nyesteFnrEllerNpid();
+				String nyesteFnrEllerNpid = identer.nyesteFnrEllerNpid();
 				if (nyesteFnrEllerNpid == null) {
-					log.info("Hendelse med opplysningstype={} og hendelseId={} mangler nyeste FNR eller NPID i PDL. Ignorerer hendelse.", personhendelse.getOpplysningstype(), personhendelse.getHendelseId());
+					log.info("Doedsfall-hendelse med hendelseId={} mangler nyeste FNR eller NPID i PDL. Ignorerer hendelse.", doedsfall.hendelseId());
 					return;
 				}
 
-				int antallRaderOppdatert = sakRepository.oppdaterFoedselsnummerOgDoedsdatoForAktoerIder(identer.aktoerIder(), nyesteFnrEllerNpid, personhendelse.getDoedsfall().getDoedsdato());
-				loggDatabaseoppdatering(antallRaderOppdatert, personhendelse);
+				int antallRaderOppdatert = sakRepository.oppdaterFoedselsnummerOgDoedsdatoForAktoerIder(identer.aktoerIder(), nyesteFnrEllerNpid, doedsfall.doedsdato());
+				loggDatabaseoppdatering(antallRaderOppdatert, doedsfall);
 			}
 			case ANNULLERT -> {
-				List<String> identer = personhendelse.getPersonidenter().stream().map(CharSequence::toString).toList();
-
-				int antallRaderOppdatert = sakRepository.annullerDoedsdatoForAktoerIder(identer);
-				loggDatabaseoppdatering(antallRaderOppdatert, personhendelse);
+				int antallRaderOppdatert = sakRepository.annullerDoedsdatoForAktoerIder(doedsfall.aktoerIder());
+				loggDatabaseoppdatering(antallRaderOppdatert, doedsfall);
 			}
 		}
 	}
 
-	private boolean erHendelseEtDoedsfall(Personhendelse personhendelse) {
-		return OPPLYSNINGSTYPE_DOEDSFALL.contentEquals(personhendelse.getOpplysningstype());
-	}
-
-	String hentFoersteIdentFraPersonhendelse(Personhendelse personhendelse) {
-		return personhendelse.getPersonidenter().getFirst().toString();
-	}
-
-	private void loggIgnorertHendelse(Personhendelse personhendelse) {
-		log.info("Hendelse med opplysningstype={}, endringstype={}, hendelseId={} mottatt. Ignorerer hendelse.",
-				personhendelse.getOpplysningstype(), personhendelse.getEndringstype(), personhendelse.getHendelseId());
-	}
-
-	private void loggDatabaseoppdatering(int antallOppdaterteRader, Personhendelse personhendelse) {
+	private void loggDatabaseoppdatering(int antallOppdaterteRader, Doedsfallhendelse doedsfall) {
 		if (antallOppdaterteRader == 0) {
-			log.info("Ingen saksrader ble oppdatert med dødsdato og fødselsnummer for hendelseId={}.", personhendelse.getHendelseId());
+			log.info("Ingen saksrader ble oppdatert med dødsdato og fødselsnummer for hendelseId={}.", doedsfall.hendelseId());
 		} else {
-			log.info("Har oppdatert {} saksrader med dødsdato og fødselsnummer for hendelseId={}.", antallOppdaterteRader, personhendelse.getHendelseId());
+			log.info("Har oppdatert {} saksrader med dødsdato og fødselsnummer for hendelseId={}.", antallOppdaterteRader, doedsfall.hendelseId());
 		}
 	}
 
