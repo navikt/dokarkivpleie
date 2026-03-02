@@ -1,9 +1,8 @@
 package no.nav.dokarkivpleie.repository;
 
 import no.nav.dokarkivpleie.domain.Fagomraade;
-import org.springframework.data.repository.CrudRepository;
 
-public interface FagomraadeRepository extends CrudRepository<Fagomraade, String> {
+public interface FagomraadeRepository extends BaseJpaRepository<Fagomraade, String>, HibernateRepository<Fagomraade> {
 
 	Fagomraade findFagomraadeByKode(String kode);
 
