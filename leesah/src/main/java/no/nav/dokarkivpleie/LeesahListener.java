@@ -27,10 +27,6 @@ public class LeesahListener {
 	public void lesPersonhendelserFraLeesah(Personhendelse personhendelse) {
 		if (OPPLYSNINGSTYPE_DOEDSFALL.equals(personhendelse.getOpplysningstype().toString())) {
 			karp001Service.behandleDoedsfallhendelseFraLeesah(mapPersonhendelseTilDoedsfall(personhendelse));
-		} else {
-			// Denne loggingen blir fjernet etter at vi har kjørt i prod og fått testet
-			log.info("Hendelse med opplysningstype={}, endringstype={}, hendelseId={} mottatt. Ignorerer hendelse.",
-					personhendelse.getOpplysningstype(), personhendelse.getEndringstype(), personhendelse.getHendelseId());
 		}
 	}
 
