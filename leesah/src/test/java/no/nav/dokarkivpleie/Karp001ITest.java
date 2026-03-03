@@ -1,5 +1,6 @@
 package no.nav.dokarkivpleie;
 
+import jakarta.persistence.EntityManager;
 import no.nav.dokarkivpleie.domain.Sak;
 import no.nav.dokarkivpleie.domain.Saksstatus;
 import no.nav.dokarkivpleie.repository.SakRepository;
@@ -58,9 +59,15 @@ public class Karp001ITest extends AbstractKafkaBrokerTest {
 	@Autowired
 	private SakRepository sakRepository;
 
+	@Autowired
+	EntityManager entityManager;
+
 	@BeforeEach
 	void setUp() {
-		sakRepository.deleteAll();
+		entityManager
+				.createQuery("delete from Sak")
+				.executeUpdate();
+		reinitTransaction();
 	}
 
 	@Test
@@ -110,7 +117,7 @@ public class Karp001ITest extends AbstractKafkaBrokerTest {
 		stubNaisTexasToken();
 		stubPdl("hentidenter.json");
 		var doedsdatoFoerKorrigering = LocalDate.now();
-		sakRepository.saveAll(List.of(
+		sakRepository.persistAll(List.of(
 				lagSak(123L, AKTOERID_1, AAPEN).brukerIdType(FNR).brukerId(FNR_FOR_AKTOERID_1_OG_2).doedsdato(doedsdatoFoerKorrigering).build(),
 				lagSak(124L, AKTOERID_1, AAPEN).build()));
 		reinitTransaction();
@@ -131,7 +138,7 @@ public class Karp001ITest extends AbstractKafkaBrokerTest {
 	void skalAnnullereDoedsdatoForEndringstypeAnnullert() {
 		stubNaisTexasToken();
 		stubPdl("hentidenter.json");
-		sakRepository.save(lagSak(123L, AKTOERID_1, AAPEN).doedsdato(LocalDate.now()).build());
+		sakRepository.persist(lagSak(123L, AKTOERID_1, AAPEN).doedsdato(LocalDate.now()).build());
 		reinitTransaction();
 
 		Personhendelse personhendelse = lagLeesahDoedsfallHendelse(List.of(FNR_FOR_AKTOERID_1_OG_2, AKTOERID_1), DOEDSDATO, ANNULLERT);
@@ -273,7 +280,7 @@ public class Karp001ITest extends AbstractKafkaBrokerTest {
 	}
 
 	private void lagSaker() {
-		sakRepository.saveAll(List.of(
+		sakRepository.persistAll(List.of(
 				lagSak(123L, AKTOERID_1, AAPEN).build(),
 				lagSak(124L, AKTOERID_2, AAPEN).build(),
 				lagSak(125L, AKTOERID_3, AAPEN).build()
@@ -300,5 +307,4 @@ public class Karp001ITest extends AbstractKafkaBrokerTest {
 						.withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
 						.withBodyFile("nais-texas/texas_response.json")));
 	}
-
 }

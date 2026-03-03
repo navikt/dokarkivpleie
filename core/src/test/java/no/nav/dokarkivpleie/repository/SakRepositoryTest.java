@@ -6,6 +6,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.transaction.TestTransaction;
 
@@ -44,12 +45,16 @@ class SakRepositoryTest {
 	@Autowired
 	SakRepository sakRepository;
 
+	@Autowired
+	TestEntityManager testEntityManager;
+
 	@AfterEach
 	public void cleanUp() {
-		sakRepository.deleteAll();
+		testEntityManager.getEntityManager()
+				.createQuery("delete from Sak")
+				.executeUpdate();
 		commitAndBeginNewTransaction();
 	}
-
 
 	@Test
 	void skalFinneAktoeriderSomSkalFaaOppdatertFoedselsnummerOgDoedsdato() {
@@ -60,7 +65,7 @@ class SakRepositoryTest {
 		var sakMedKassasjonsstatus = createBaseSak().aktoerId(AKTOER_ID3).kassasjonsstatus(KASSERT).saksstatus(AVSLUTTET).build();
 		var sakMedDoedsdato = createBaseSak().aktoerId(AKTOER_ID3).doedsdato(LocalDate.now().minusWeeks(1)).build();
 		var sakMedAnnenAktoerId = createBaseSak().aktoerId(AKTOER_ID2).build();
-		sakRepository.saveAll(List.of(sak, sakMedSammeAktoerId, sakMedFeilTema, sakUtenAktoerId, sakMedKassasjonsstatus, sakMedDoedsdato, sakMedAnnenAktoerId));
+		sakRepository.persistAll(List.of(sak, sakMedSammeAktoerId, sakMedFeilTema, sakUtenAktoerId, sakMedKassasjonsstatus, sakMedDoedsdato, sakMedAnnenAktoerId));
 
 		Set<String> saker = sakRepository.finnAktoeriderDerFoedselsnummerOgDoedsdatoSkalBliOppdatert(TEMA_AAP);
 
@@ -76,7 +81,7 @@ class SakRepositoryTest {
 		var sakMedAnnetTema = createBaseSak().tema(TEMA_BIL).aktoerId(AKTOER_ID1).build();
 		var sakUtenAktoerId = createBaseSak().build();
 		var sakMedFeilSaksstatus = createBaseSak().aktoerId(AKTOER_ID1).saksstatus(AVSLUTTET).build();
-		sakRepository.saveAll(List.of(relevantSak, sakMedAnnetTema, sakUtenAktoerId, sakMedFeilSaksstatus));
+		sakRepository.persistAll(List.of(relevantSak, sakMedAnnetTema, sakUtenAktoerId, sakMedFeilSaksstatus));
 
 		sakRepository.oppdaterFoedselsnummerOgDoedsdato(AKTOER_ID1, BRUKERID_FNR, DOEDSDATO);
 		commitAndBeginNewTransaction();
@@ -96,7 +101,7 @@ class SakRepositoryTest {
 		var sakMedKassasjonsstatus = createBaseSak().brukerId(BRUKERID2_FNR).kassasjonsstatus(KASSERT).doedsdato(DOEDSDATO_OVER_10_AAR).build();
 		var relevantSak = createBaseSak().brukerId(BRUKERID_FNR).doedsdato(DOEDSDATO_OVER_10_AAR).build();
 		var relevantSakMedSammeAktoerId = createBaseSak().brukerId(BRUKERID_FNR).doedsdato(DOEDSDATO_OVER_10_AAR).build();
-		sakRepository.saveAll(List.of(sakMedFeilTema, sakUtenDoedsdato, sakMedForNyDoedsdato, sakMedKassasjonsstatus, relevantSak, relevantSakMedSammeAktoerId));
+		sakRepository.persistAll(List.of(sakMedFeilTema, sakUtenDoedsdato, sakMedForNyDoedsdato, sakMedKassasjonsstatus, relevantSak, relevantSakMedSammeAktoerId));
 
 		Set<String> avdoedePersoner = sakRepository.findDistinctFnrHvorPersonErDoedIMerEnnMaaneder(TEMA_AAP, 120);
 
@@ -111,7 +116,7 @@ class SakRepositoryTest {
 		var sakMedFeilBruker = createBaseSak().brukerId(BRUKERID2_FNR).build();
 		var sakMedKassasjonsstatus = createBaseSak().brukerId(BRUKERID_FNR).kassasjonsstatus(KASSERT).build();
 		var relevantSak = createBaseSak().brukerId(BRUKERID_FNR).build();
-		sakRepository.saveAll(List.of(sakMedFeilTema, sakMedFeilBruker, sakMedKassasjonsstatus, relevantSak));
+		sakRepository.persistAll(List.of(sakMedFeilTema, sakMedFeilBruker, sakMedKassasjonsstatus, relevantSak));
 
 		Set<Sak> ukasserteSaker = sakRepository.finnUkasserteSakerForBrukere(List.of(BRUKERID_FNR), TEMA_AAP);
 
@@ -129,7 +134,7 @@ class SakRepositoryTest {
 				createBaseSak(3L).aktoerId(AKTOER_ID2).doedsdato(LocalDate.now()).build(),
 				createBaseSak(4L).aktoerId(AKTOER_ID3).build()
 		);
-		sakRepository.saveAll(relevanteSaker);
+		sakRepository.persistAll(relevanteSaker);
 		commitAndBeginNewTransaction();
 
 		sakRepository.oppdaterFoedselsnummerOgDoedsdatoForAktoerIder(List.of(AKTOER_ID1, AKTOER_ID2), BRUKERID_FNR, DOEDSDATO);
@@ -148,7 +153,7 @@ class SakRepositoryTest {
 				createBaseSak(2L).aktoerId(AKTOER_ID2).brukerIdType(BRUKERIDTYPE).brukerId(BRUKERID_FNR).doedsdato(LocalDate.now()).build(),
 				createBaseSak(3L).aktoerId(AKTOER_ID2).brukerIdType(BRUKERIDTYPE).brukerId(BRUKERID_FNR).doedsdato(LocalDate.now()).build()
 		);
-		sakRepository.saveAll(relevanteSaker);
+		sakRepository.persistAll(relevanteSaker);
 		commitAndBeginNewTransaction();
 
 		sakRepository.annullerDoedsdatoForAktoerIder(List.of(AKTOER_ID1, AKTOER_ID2));

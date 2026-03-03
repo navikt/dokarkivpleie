@@ -1,7 +1,6 @@
 package no.nav.dokarkivpleie.repository;
 
 import no.nav.dokarkivpleie.domain.Sak;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
@@ -9,8 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
-// Vurder å ta i bruk noe à la BaseJpaRepository (fra dokarkiv) for å begrense rettigheter til deleteAll etc.
-public interface SakRepository extends JpaRepository<Sak, Long> {
+public interface SakRepository extends BaseJpaRepository<Sak, Long>, HibernateRepository<Sak> {
 
 	@Query(value = """ 
 		select distinct(sak.aktoerId) from Sak sak
