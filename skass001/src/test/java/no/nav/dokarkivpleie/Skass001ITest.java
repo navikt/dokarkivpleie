@@ -102,10 +102,10 @@ public class Skass001ITest {
 	@BeforeEach
 	void setUp() {
 		entityManager
-				.createQuery("DELETE FROM Sak")
+				.createQuery("delete from Sak")
 				.executeUpdate();
 		entityManager
-				.createQuery("DELETE FROM Fagomraade ")
+				.createQuery("delete from Fagomraade ")
 				.executeUpdate();
 
 		namedParameterJdbcTemplate.update("delete from joark.t_slettebestilling", Collections.emptyMap());
@@ -367,9 +367,9 @@ public class Skass001ITest {
 						.withStatus(httpStatus.value())));
 	}
 
-	private List<Slettebestilling> getSlettebestillinger(){
+	private List<Slettebestilling> getSlettebestillinger() {
 		return namedParameterJdbcTemplate.query(
-				"SELECT * FROM joark.T_SLETTEBESTILLING",
+				"select * from joark.T_SLETTEBESTILLING",
 				Collections.emptyMap(),
 				(rs, _) -> mapRowToSlettebestilling(rs)
 		);

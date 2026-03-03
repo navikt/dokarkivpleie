@@ -44,14 +44,14 @@ class SakRepositoryTest {
 
 	@Autowired
 	SakRepository sakRepository;
-	
+
 	@Autowired
 	TestEntityManager testEntityManager;
 
 	@AfterEach
 	public void cleanUp() {
 		testEntityManager.getEntityManager()
-				.createQuery("DELETE FROM Sak")
+				.createQuery("delete from Sak")
 				.executeUpdate();
 		commitAndBeginNewTransaction();
 	}

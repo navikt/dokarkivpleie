@@ -64,9 +64,9 @@ public class Karp001ITest extends AbstractKafkaBrokerTest {
 
 	@BeforeEach
 	void setUp() {
-			entityManager
-					.createQuery("DELETE FROM Sak")
-					.executeUpdate();
+		entityManager
+				.createQuery("delete from Sak")
+				.executeUpdate();
 		reinitTransaction();
 	}
 

@@ -2,95 +2,67 @@ package no.nav.dokarkivpleie.repository;
 
 import java.util.List;
 
+/* Kopi av lisensfil: https://github.com/vladmihalcea/hypersistence-utils/blob/master/LICENSE
+Copyright {2017-2020} {Mihalcea Vlad-Alexandru}
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Changes done to the file:
+- Remove following methods:
+	* findAll
+	* save
+	* saveAll
+	* saveAndFlush
+	* saveAllAndFlush
+	* merge
+	* update
+	* persistAndFlush
+	* persistAllAndFlush
+	* mergeAndFlush
+	* mergeAll
+	* mergeAllAndFlush
+	* updateAndFlush
+	* updateAll
+	* updateAllAndFlush
+*/
+
 /**
- * Inspirert fra HibernateRepository https://github.com/vladmihalcea/hibernate-types
+ * Kopiert og modifisiert fra HibernateRepository.java i https://github.com/vladmihalcea/hypersistence-utils (hypersistence-utils-hibernate-71)
  * <p>
  * Metoder for å behandle Hibernate sine entity state changes.
  *
  * @param <T> JPA entiteten.
  */
 public interface HibernateRepository<T> {
+
 	/**
-	 * Persisterer entitet og gjør den managed.
-	 * <p>
-	 * Bruk denne metoden hvis du skal lagre et nytt objekt.
+	 * The persist method allows you to pass the provided entity to the {@code persist} method of the
+	 * underlying JPA {@code EntityManager}.
 	 *
-	 * @param entity som skal persisteres
-	 * @param <S>    entitetstype
-	 * @return managed entity
+	 * @param entity entity to persist
+	 * @param <S>    entity type
+	 * @return entity
 	 */
 	<S extends T> S persist(S entity);
 
 	/**
-	 * Persisterer entitet og gjør den managed.
-	 * <p>
-	 * Bruk denne metoden hvis du skal lagre et nytt objekt og synkronisere det med databasen.
-	 * Denne metoden committer ikke endringene. Det er det transaksjonen som gjør!
+	 * The persistAll method allows you to pass the provided entities to the {@code persist} method of the
+	 * underlying JPA {@code EntityManager}.
 	 *
-	 * @param entity som skal persisteres
-	 * @param <S>    entitetstype
-	 * @return managed entity
-	 */
-	<S extends T> S persistAndFlush(S entity);
-
-	/**
-	 * Persisterer flere entiteter og gjør de managed.
-	 * <p>
-	 * Bruk denne metoden hvis du skal lagre flere enn ett nytt objekt.
-	 *
-	 * @param entities som skal persisteres
-	 * @param <S>    entitetstype
-	 * @return liste av managed entiteter
+	 * @param entities entities to persist
+	 * @param <S>    entity type
+	 * @return entities
 	 */
 	<S extends T> List<S> persistAll(Iterable<S> entities);
 
-	/**
-	 * Kopierer tilstanden fra detached entitet til entitet som er managed.
-	 * <p>
-	 * Bruk denne metoden hvis du synkronisere endringer til databasen fra en detached entitet, med dirty checking.
-	 * Gjør en select før update.
-	 *
-	 * @param entity som skal persisteres
-	 * @param <S>    entitetstype
-	 * @return managed entitet
-	 */
-	<S extends T> S merge(S entity);
-
-	/**
-	 * Kopierer tilstanden fra detached entitet til entitet som er managed.
-	 * <p>
-	 * Bruk denne metoden hvis du synkronisere endringer til databasen fra en detached entitet, med dirty checking.
-	 * Gjør en select før update.
-	 * Denne metoden committer ikke endringene. Det er det transaksjonen som gjør!
-	 *
-	 * @param entity som skal persisteres
-	 * @param <S>    entitetstype
-	 * @return managed entitet
-	 */
-	<S extends T> S mergeAndFlush(S entity);
-
-	/**
-	 * Tvinger kopi av tilstanden fra detached entitet til entitet som er managed.
-	 * <p>
-	 * Bruk denne metoden hvis du vil tvinge endringer til databasen fra en detached entitet, uten dirty checking.
-	 * Gjør en select før update.
-	 *
-	 * @param entity som skal persisteres
-	 * @param <S>    entitetstype
-	 * @return managed entitet
-	 */
-	<S extends T> S update(S entity);
-
-	/**
-	 * Tvinger kopi av tilstanden fra detached entitet til entitet som er managed.
-	 * <p>
-	 * Bruk denne metoden hvis du vil tvinge endringer til databasen fra en detached entitet, uten dirty checking.
-	 * Gjør en select før update.
-	 * Denne metoden committer ikke endringene. Det er det transaksjonen som gjør!
-	 *
-	 * @param entity som skal persisteres
-	 * @param <S>    entitetstype
-	 * @return managed entitet
-	 */
-	<S extends T> S updateAndFlush(S entity);
 }
