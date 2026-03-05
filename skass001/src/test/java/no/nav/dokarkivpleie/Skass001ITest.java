@@ -6,7 +6,6 @@ import no.nav.dokarkivpleie.config.CoreConfig;
 import no.nav.dokarkivpleie.config.RepositoryConfig;
 import no.nav.dokarkivpleie.consumers.dvh.DatavarehusFunctionalException;
 import no.nav.dokarkivpleie.consumers.dvh.DatavarehusTechnicalException;
-import no.nav.dokarkivpleie.consumers.pdl.PdlFunctionalException;
 import no.nav.dokarkivpleie.domain.Avleveringsstatus;
 import no.nav.dokarkivpleie.domain.Fagomraade;
 import no.nav.dokarkivpleie.domain.Sak;
@@ -17,9 +16,10 @@ import no.nav.dokarkivpleie.repository.JournalpostJdbcRepository;
 import no.nav.dokarkivpleie.repository.SakRepository;
 import no.nav.dokarkivpleie.repository.SlettebestillingJdbcRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -40,9 +40,7 @@ import java.util.stream.Stream;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -73,13 +71,13 @@ public class Skass001ITest {
 
 	private static final String FAGOMRAADE_AAP = "AAP";
 	private static final String FAGOMRAADE_ENF = "ENF";
+	private static final LocalDate DOEDSDATO_MER_ENN_10_AAR_SIDEN = LocalDate.now().minusMonths(121);
 
 	@Autowired
 	private FagomraadeRepository fagomraadeRepository;
 
 	@Autowired
 	private SakRepository sakRepository;
-
 
 	@Autowired
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -113,13 +111,11 @@ public class Skass001ITest {
 
 	@Test
 	void skalKassereSakDerAvleverMedDokErTrue() {
-		stubPdl("hentpersonbolk.json");
-		stubNaisTexasToken();
 		stubDvh("response.json");
 		lagFagomraader();
 
 		List<Sak> saker = List.of(
-				Sak.builder().sakId(123L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).build()
+				Sak.builder().sakId(123L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build()
 		);
 		sakRepository.persistAll(saker);
 		reinitTransaction();
@@ -127,9 +123,6 @@ public class Skass001ITest {
 		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_AAP);
 
 		Sak sak = sakRepository.findById(123L).get();
-		assertThat(sak.getBrukerId()).isEqualTo("07417813777");
-		assertThat(sak.getDoedsdato()).isEqualTo(LocalDate.of(1900, 11, 3));
-
 		assertThat(sak.getSaksstatus()).isEqualTo(Saksstatus.AVSLUTTET);
 		assertThat(sak.getKassasjonsstatus()).isEqualTo(BEVARINGSTID_PASSERT);
 		assertThat(sak.getEndretAv()).isEqualTo(MERK_SAKER_BEVARINGSTID_PASSERT);
@@ -141,13 +134,11 @@ public class Skass001ITest {
 
 	@Test
 	void skalKassereSakDerAvleverMedDokErFalse() {
-		stubPdl("hentpersonbolk.json");
-		stubNaisTexasToken();
 		stubDvh("response.json");
 		lagFagomraader();
 
 		List<Sak> saker = List.of(
-				Sak.builder().sakId(123L).tema(FAGOMRAADE_ENF).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).build()
+				Sak.builder().sakId(123L).tema(FAGOMRAADE_ENF).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build()
 		);
 		sakRepository.persistAll(saker);
 		reinitTransaction();
@@ -155,9 +146,6 @@ public class Skass001ITest {
 		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_ENF);
 
 		Sak sak = sakRepository.findById(123L).get();
-		assertThat(sak.getBrukerId()).isEqualTo("07417813777");
-		assertThat(sak.getDoedsdato()).isEqualTo(LocalDate.of(1900, 11, 3));
-
 		assertThat(sak.getSaksstatus()).isEqualTo(Saksstatus.AVSLUTTET);
 		assertThat(sak.getKassasjonsstatus()).isEqualTo(BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT);
 		assertThat(sak.getEndretAv()).isEqualTo(MERK_SAKER_BEVARINGSTID_PASSERT);
@@ -169,22 +157,27 @@ public class Skass001ITest {
 				.containsExactly(tuple("123", "OPPRETTET", "DOKUMENTER_PA_SAK", "ARK", "BEVARINGSTID"));
 	}
 
+	@ParameterizedTest
+	@MethodSource
+	void skalAvslutteJobbenDersomFagomraadetErUgyldig(Fagomraade fagomraadeIDb, String fagomraadeJobbenBlirKjoertFor) {
+		stubDvh("response.json");
 
-//	@ParameterizedTest
-//	@MethodSource
-//	void skalAvslutteJobbenDersomFagomraadetErUgyldig(Fagomraade fagomraadeIDb, String fagomraadeJobbenBlirKjoertFor) {
-//		stubDvh("response.json");
-//		lagreSaker();
-//		fagomraadeRepository.persist(fagomraadeIDb);
-//
-//		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(fagomraadeJobbenBlirKjoertFor);
-//
-//		List<Sak> saker = sakRepository.findAll();
-//
-//		assertThat(saker)
-//				.extracting(Sak::getDatoEndret, Sak::getEndretAv)
-//				.containsOnly(tuple(null, null));
-//	}
+		List<Sak> saker = List.of(
+				Sak.builder().sakId(123L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).build(),
+				Sak.builder().sakId(234L).tema(FAGOMRAADE_AAP).aktoerId("2376241635675").applikasjon("FS22").saksstatus(AAPEN).build(),
+				Sak.builder().sakId(345L).tema(FAGOMRAADE_AAP).aktoerId("2425192326667").applikasjon("FS22").saksstatus(AAPEN).build()
+		);
+		sakRepository.persistAll(saker);
+		reinitTransaction();
+
+		fagomraadeRepository.persist(fagomraadeIDb);
+
+		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(fagomraadeJobbenBlirKjoertFor);
+
+		assertThat(saker)
+				.extracting(Sak::getDatoEndret, Sak::getEndretAv)
+				.containsOnly(tuple(null, null));
+	}
 
 	private static Stream<Arguments> skalAvslutteJobbenDersomFagomraadetErUgyldig() {
 		String temaSomIkkeFinnesIDb = "BIL";
@@ -220,33 +213,14 @@ public class Skass001ITest {
 		verify(4, getRequestedFor(urlPathEqualTo("/dvh")));
 	}
 
-	@Test
-	@Disabled // Denne skal inn i kafka-modulen
-	void skalAvslutteJobbenDersomPdlKaster5xx() {
-		stubDvh("response.json");
-		stubNaisTexasToken();
-		stubPdl("unauthorized.json");
-		lagFagomraader();
-		lagreSaker();
-
-		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_AAP);
-
-		assertThatExceptionOfType(PdlFunctionalException.class)
-				.isThrownBy(() -> merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_AAP))
-				.withMessageContaining("Kunne ikke hente aktørider for folkeregisterident i pdl.");
-	}
-
-	// SakId 345 har éin journalpost i status M og ein i status FL
-	// Merk at dødsdato skal bli oppdatert sjølv om saka ikkje blir avslutta
+	// SakId 345 har en journalpost i status M og en i status FL
 	@Test
 	void skalAvslutteBehandlingAvArkivsakMedUferdigeJournalposter() {
-		stubPdl("hentpersonbolk.json");
-		stubNaisTexasToken();
 		stubDvh("response.json");
 		lagFagomraader();
 
 		List<Sak> saker = List.of(
-				Sak.builder().sakId(345L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).build()
+				Sak.builder().sakId(345L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build()
 		);
 		sakRepository.persistAll(saker);
 		reinitTransaction();
@@ -256,24 +230,19 @@ public class Skass001ITest {
 		Sak sak = sakRepository.findById(345L).get();
 
 		assertThat(sak.getSaksstatus()).isEqualTo(AAPEN);
-
-		assertThat(sak.getBrukerId()).isEqualTo("07417813777");
-		assertThat(sak.getDoedsdato()).isEqualTo(LocalDate.of(1900, 11, 3));
-		assertThat(sak.getEndretAv()).isEqualTo(MERK_SAKER_BEVARINGSTID_PASSERT);
-		assertThat(sak.getDatoEndret()).isCloseTo(LocalDateTime.now(), within(10, SECONDS));
+		assertThat(sak.getEndretAv()).isNull();
+		assertThat(sak.getDatoEndret()).isNull();
 	}
 
 	// SakId 346 har éin journalpost i status U
 	// Lag ein journalpost med status U, A eller UB slik at ein unngår harUferdigeJournalposter-sjekken
 	@Test
 	void skalAvbryteTomArkivsak() {
-		stubPdl("hentpersonbolk.json");
-		stubNaisTexasToken();
 		stubDvh("response.json");
 		lagFagomraader();
 
 		List<Sak> saker = List.of(
-				Sak.builder().sakId(346L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).build()
+				Sak.builder().sakId(346L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build()
 		);
 		sakRepository.persistAll(saker);
 		reinitTransaction();
@@ -281,10 +250,6 @@ public class Skass001ITest {
 		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_AAP);
 
 		Sak sak = sakRepository.findById(346L).get();
-
-		assertThat(sak.getBrukerId()).isEqualTo("07417813777");
-		assertThat(sak.getDoedsdato()).isEqualTo(LocalDate.of(1900, 11, 3));
-
 		assertThat(sak.getSaksstatus()).isEqualTo(Saksstatus.AVBRUTT);
 		assertThat(sak.getAvleveringsstatus()).isEqualTo(Avleveringsstatus.AVBRUTT);
 		assertThat(sak.getKassasjonsstatus()).isEqualTo(BEVARINGSTID_PASSERT);
@@ -297,8 +262,6 @@ public class Skass001ITest {
 
 	@Test
 	public void skalAvbryteBehandlingAvArkivsakUtenAdministrativEnhet() {
-		stubPdl("hentpersonbolk.json");
-		stubNaisTexasToken();
 		stubDvh("response.json");
 		lagFagomraader();
 
@@ -311,17 +274,8 @@ public class Skass001ITest {
 
 		assertThat(sak.getSaksstatus()).isEqualTo(AAPEN);
 		assertThat(sak.getKassasjonsstatus()).isNull();
-	}
-
-	// Kva skal vi leggje inn i schema.sql, og kva tek vi i sakRepo?
-	private void lagreSaker() {
-		List<Sak> saker = List.of(
-				Sak.builder().sakId(123L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).build(),
-				Sak.builder().sakId(234L).tema(FAGOMRAADE_AAP).aktoerId("2376241635675").applikasjon("FS22").saksstatus(AAPEN).build(),
-				Sak.builder().sakId(345L).tema(FAGOMRAADE_AAP).aktoerId("2425192326667").applikasjon("FS22").saksstatus(AAPEN).build()
-		);
-		sakRepository.persistAll(saker);
-		reinitTransaction();
+		assertThat(sak.getEndretAv()).isNull();
+		assertThat(sak.getDatoEndret()).isNull();
 	}
 
 	protected void reinitTransaction() {
@@ -335,22 +289,6 @@ public class Skass001ITest {
 		fagomraadeRepository.persist(new Fagomraade(FAGOMRAADE_ENF, "10_AAR_ETTER_BRUKERS_DOED", false));
 
 		reinitTransaction();
-	}
-
-	void stubPdl(String filename) {
-		stubFor(post(urlEqualTo("/pdl"))
-				.willReturn(aResponse()
-						.withStatus(OK.value())
-						.withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
-						.withBodyFile("pdl/" + filename)));
-	}
-
-	void stubNaisTexasToken() {
-		stubFor(post("/texas-token")
-				.willReturn(aResponse()
-						.withStatus(OK.value())
-						.withHeader(CONTENT_TYPE, APPLICATION_JSON_VALUE)
-						.withBodyFile("nais-texas/texas_response.json")));
 	}
 
 	void stubDvh(String filename) {
@@ -390,7 +328,6 @@ public class Skass001ITest {
 			String begrunnelse
 	) {
 	}
-
 
 	private Slettebestilling mapRowToSlettebestilling(ResultSet rs) throws SQLException {
 		return Slettebestilling.builder()

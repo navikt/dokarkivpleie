@@ -32,6 +32,7 @@ import static org.springframework.transaction.annotation.Propagation.REQUIRES_NE
 @Slf4j
 @Service
 public class ArkivsakService {
+
 	private final SakRepository sakRepository;
 	private final JournalpostJdbcRepository journalpostJdbcRepository;
 	private final AdministrativEnhetService administrativEnhetService;
