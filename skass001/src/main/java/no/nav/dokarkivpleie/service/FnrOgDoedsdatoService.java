@@ -14,6 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Denne er ikke i bruk nå, men skal kanskje brukes ved datalast (Oppdatering av dødsdato/fnr fra før vi kobla oss på leesah-topicet).
+ * Slettes etter vi har løst datalast
+ */
 @Slf4j
 @Service
 public class FnrOgDoedsdatoService {

@@ -14,7 +14,6 @@ public class SqlQueries {
 			and (sr.feilregistrert is null or sr.feilregistrert = '0')
 			""";
 
-	// TODO: Kan ein både bruke <= og >=?
 	public static final String HENT_NAVN_FOR_ADMINISTRATIV_ENHET = """
 			select enhet_navn
 			from joark.t_administrativ_enhet
@@ -22,5 +21,4 @@ public class SqlQueries {
 			and dato_fom <= :opprettet_tidspunkt
 			and dato_tom >= :opprettet_tidspunkt
 			""";
-
 }

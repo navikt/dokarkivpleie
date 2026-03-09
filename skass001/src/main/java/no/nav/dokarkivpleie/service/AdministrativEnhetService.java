@@ -30,6 +30,7 @@ public class AdministrativEnhetService {
 		this.datavarehusConsumer = datavarehusConsumer;
 	}
 
+	//TODO: Skal denne returnere listen i steden for å lagre den?
 	public void hentAdministrativeEnheterFraDatavarehus() {
 		log.info("Populerer administrativEnhetMap med data fra datavarehus");
 

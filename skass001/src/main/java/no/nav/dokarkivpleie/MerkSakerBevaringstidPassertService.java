@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import no.nav.dokarkivpleie.domain.Fagomraade;
 import no.nav.dokarkivpleie.repository.FagomraadeRepository;
 import no.nav.dokarkivpleie.repository.SakRepository;
-import no.nav.dokarkivpleie.service.AdministrativEnhetService;
 import no.nav.dokarkivpleie.service.ArkivsakService;
 import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
@@ -24,28 +23,23 @@ public class MerkSakerBevaringstidPassertService {
 	public static final String MERK_SAKER_BEVARINGSTID_PASSERT = "MerkSakerBevaringstidPassert";
 
 	private final FagomraadeRepository fagomraadeRepository;
-	private final AdministrativEnhetService administrativEnhetService;
 	private final SakRepository sakRepository;
 	private final ArkivsakService arkivsakService;
 
 	MerkSakerBevaringstidPassertService(FagomraadeRepository fagomraadeRepository,
 										SakRepository sakRepository,
-										AdministrativEnhetService administrativEnhetService,
 										ArkivsakService arkivsakService) {
 		this.fagomraadeRepository = fagomraadeRepository;
 		this.sakRepository = sakRepository;
-		this.administrativEnhetService = administrativEnhetService;
 		this.arkivsakService = arkivsakService;
 	}
 
 	public void merkSakerBevaringstidPassert(@NonNull String tema) {
-		administrativEnhetService.hentAdministrativeEnheterFraDatavarehus();
-
 		log.info("Skal markere saker der bevaringstid har passert for tema={}.", tema);
 
 		Fagomraade fagomraade = fagomraadeRepository.findFagomraadeByKode(tema);
 		if (erFagomraadeUgyldig(fagomraade)) {
-			log.warn("Avslutter markering av saker der bevaringstid har passert for ugyldig tema={}.", tema);
+			log.error("Avslutter markering av saker der bevaringstid har passert for ugyldig tema={}.", tema);
 			return;
 		}
 

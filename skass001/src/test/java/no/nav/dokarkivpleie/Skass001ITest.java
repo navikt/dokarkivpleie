@@ -3,27 +3,18 @@ package no.nav.dokarkivpleie;
 import jakarta.persistence.EntityManager;
 import no.nav.dokarkivpleie.config.CoreConfig;
 import no.nav.dokarkivpleie.config.RepositoryConfig;
-import no.nav.dokarkivpleie.consumers.dvh.DatavarehusFunctionalException;
-import no.nav.dokarkivpleie.consumers.dvh.DatavarehusTechnicalException;
 import no.nav.dokarkivpleie.domain.Avleveringsstatus;
 import no.nav.dokarkivpleie.domain.Fagomraade;
 import no.nav.dokarkivpleie.domain.Sak;
 import no.nav.dokarkivpleie.domain.Saksstatus;
 import no.nav.dokarkivpleie.domain.Slettebestilling;
-import no.nav.dokarkivpleie.repository.AdministrativEnhetJdbcRepository;
 import no.nav.dokarkivpleie.repository.FagomraadeRepository;
-import no.nav.dokarkivpleie.repository.JournalpostJdbcRepository;
 import no.nav.dokarkivpleie.repository.SakRepository;
-import no.nav.dokarkivpleie.repository.SlettebestillingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,7 +23,6 @@ import org.wiremock.spring.EnableWireMock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
@@ -51,7 +41,6 @@ import static no.nav.dokarkivpleie.domain.SlettebestillingHjemmel.ARK;
 import static no.nav.dokarkivpleie.domain.SlettebestillingStatus.OPPRETTET;
 import static no.nav.dokarkivpleie.domain.SlettebestillingType.DOKUMENTER_PA_SAK;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.Assertions.within;
 import static org.springframework.http.HttpHeaders.CONTENT_TYPE;
@@ -72,6 +61,10 @@ public class Skass001ITest {
 
 	private static final String FAGOMRAADE_AAP = "AAP";
 	private static final String FAGOMRAADE_ENF = "ENF";
+	private static final String FAGOMRAADE_BIL = "BIL";
+	private static final String FAGOMRAADE_UFM = "UFM";
+	private static final String FAGOMRAADE_UFO = "UFO";
+	private static final String FAGOMRAADE_GEN = "GEN";
 	private static final LocalDate DOEDSDATO_MER_ENN_10_AAR_SIDEN = LocalDate.now().minusMonths(121);
 
 	@Autowired
@@ -81,19 +74,7 @@ public class Skass001ITest {
 	private SakRepository sakRepository;
 
 	@Autowired
-	private SlettebestillingRepository slettebestillingRepository;
-
-	@Autowired
-	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-
-	@Autowired
-	private JournalpostJdbcRepository journalpostJdbcRepository;
-
-	@Autowired
-	private MerkSakerBevaringstidPassertService merkSakerBevaringstidPassertService;
-
-	@Autowired
-	private AdministrativEnhetJdbcRepository administrativEnhetJdbcRepository;
+	private MerkSakerBevaringstidPassertScheduler merkSakerBevaringstidPassertScheduler;
 
 	@Autowired
 	private EntityManager entityManager;
@@ -122,7 +103,7 @@ public class Skass001ITest {
 		sakRepository.persistAll(saker);
 		reinitTransaction();
 
-		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_AAP);
+		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
 
 		Sak sak = sakRepository.findById(123L).get();
 		assertThat(sak.getSaksstatus()).isEqualTo(Saksstatus.AVSLUTTET);
@@ -145,7 +126,7 @@ public class Skass001ITest {
 		sakRepository.persistAll(saker);
 		reinitTransaction();
 
-		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_ENF);
+		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
 
 		Sak sak = sakRepository.findById(123L).get();
 		assertThat(sak.getSaksstatus()).isEqualTo(Saksstatus.AVSLUTTET);
@@ -159,59 +140,21 @@ public class Skass001ITest {
 				.containsExactly(tuple(123L, OPPRETTET, DOKUMENTER_PA_SAK, ARK, BEVARINGSTID));
 	}
 
-	@ParameterizedTest
-	@MethodSource
-	void skalAvslutteJobbenDersomFagomraadetErUgyldig(Fagomraade fagomraadeIDb, String fagomraadeJobbenBlirKjoertFor) {
-		stubDvh("response.json");
-
-		List<Sak> saker = List.of(
-				Sak.builder().sakId(123L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).build(),
-				Sak.builder().sakId(234L).tema(FAGOMRAADE_AAP).aktoerId("2376241635675").applikasjon("FS22").saksstatus(AAPEN).build(),
-				Sak.builder().sakId(345L).tema(FAGOMRAADE_AAP).aktoerId("2425192326667").applikasjon("FS22").saksstatus(AAPEN).build()
-		);
-		sakRepository.persistAll(saker);
-		reinitTransaction();
-
-		fagomraadeRepository.persist(fagomraadeIDb);
-
-		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(fagomraadeJobbenBlirKjoertFor);
-
-		assertThat(saker)
-				.extracting(Sak::getDatoEndret, Sak::getEndretAv)
-				.containsOnly(tuple(null, null));
-	}
-
-	private static Stream<Arguments> skalAvslutteJobbenDersomFagomraadetErUgyldig() {
-		String temaSomIkkeFinnesIDb = "BIL";
-		String ugyldigBevaringstid = null;
-		String ikkeStoettetBevaringstid = "100_AAR_ETTER_BRUKERS_DOED";
-		Boolean avleverMedDokIkkeSatt = null;
-
-		return Stream.of(
-				Arguments.of(new Fagomraade(FAGOMRAADE_AAP, "10_AAR_ETTER_BRUKERS_DOED", true), temaSomIkkeFinnesIDb),
-				Arguments.of(new Fagomraade(FAGOMRAADE_AAP, ugyldigBevaringstid, true), FAGOMRAADE_AAP),
-				Arguments.of(new Fagomraade(FAGOMRAADE_AAP, ikkeStoettetBevaringstid, true), FAGOMRAADE_AAP),
-				Arguments.of(new Fagomraade(FAGOMRAADE_AAP, "10_AAR_ETTER_BRUKERS_DOED", avleverMedDokIkkeSatt), FAGOMRAADE_AAP)
-		);
-	}
-
 	@Test
-	void skalAvslutteJobbenDersomDatavarehusKaster4xx() {
+	void skalAvslutteKjoeringenDersomDatavarehusKaster4xx() {
 		stubDvh(BAD_REQUEST);
 
-		assertThatExceptionOfType(DatavarehusFunctionalException.class)
-				.isThrownBy(() -> merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_AAP))
-				.withMessage("Funksjonell feil ved henting av henting av navn for administrativ enhet fra DVH. Feilmelding=Bad Request");
+		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
+
 		verify(1, getRequestedFor(urlPathEqualTo("/dvh")));
 	}
 
 	@Test
-	void skalAvslutteJobbenDersomDatavarehusKaster5xx() {
+	void skalAvslutteKjoeringenDersomDatavarehusKaster5xx() {
 		stubDvh(INTERNAL_SERVER_ERROR);
 
-		assertThatExceptionOfType(DatavarehusTechnicalException.class)
-				.isThrownBy(() -> merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_AAP))
-				.withMessage("Teknisk feil ved henting av henting av navn for administrativ enhet fra DVH. Feilmelding=Server Error");
+		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
+
 		verify(4, getRequestedFor(urlPathEqualTo("/dvh")));
 	}
 
@@ -227,7 +170,7 @@ public class Skass001ITest {
 		sakRepository.persistAll(saker);
 		reinitTransaction();
 
-		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_AAP);
+		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
 
 		Sak sak = sakRepository.findById(345L).get();
 
@@ -249,7 +192,7 @@ public class Skass001ITest {
 		sakRepository.persistAll(saker);
 		reinitTransaction();
 
-		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_AAP);
+		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
 
 		Sak sak = sakRepository.findById(346L).get();
 		assertThat(sak.getSaksstatus()).isEqualTo(Saksstatus.AVBRUTT);
@@ -263,6 +206,28 @@ public class Skass001ITest {
 	}
 
 	@Test
+	void skalIkkeOppdatereSakerHvisFagomraadetErUgyldig() {
+		stubDvh("response.json");
+		lagUgyldigeFagomraader();
+
+		List<Sak> saker = List.of(
+				Sak.builder().sakId(123L).tema(FAGOMRAADE_BIL).aktoerId("2425192326667").applikasjon("FS22").saksstatus(AAPEN).build(),
+				Sak.builder().sakId(124L).tema(FAGOMRAADE_UFM).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).build(),
+				Sak.builder().sakId(125L).tema(FAGOMRAADE_UFO).aktoerId("2425192326667").applikasjon("FS22").saksstatus(AAPEN).build(),
+				Sak.builder().sakId(126L).tema(FAGOMRAADE_GEN).aktoerId("2376241635675").applikasjon("FS22").saksstatus(AAPEN).build()
+		);
+		sakRepository.persistAll(saker);
+		reinitTransaction();
+
+		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
+
+		List<Sak> sakerSomIkkeSkalVaereOppdaterte = finnAlleSaker();
+		assertThat(sakerSomIkkeSkalVaereOppdaterte)
+				.extracting(Sak::getDatoEndret, Sak::getEndretAv)
+				.containsOnly(tuple(null, null));
+	}
+
+	@Test
 	public void skalAvbryteBehandlingAvArkivsakUtenAdministrativEnhet() {
 		stubDvh("response.json");
 		lagFagomraader();
@@ -270,7 +235,7 @@ public class Skass001ITest {
 		sakRepository.persist(Sak.builder().sakId(9999L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").opprettetTidspunkt(LocalDateTime.now().minusMonths(300)).saksstatus(AAPEN).build());
 		reinitTransaction();
 
-		merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(FAGOMRAADE_AAP);
+		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
 
 		Sak sak = sakRepository.findById(9999L).get();
 
@@ -289,6 +254,19 @@ public class Skass001ITest {
 	void lagFagomraader() {
 		fagomraadeRepository.persist(new Fagomraade(FAGOMRAADE_AAP, "10_AAR_ETTER_BRUKERS_DOED", true));
 		fagomraadeRepository.persist(new Fagomraade(FAGOMRAADE_ENF, "10_AAR_ETTER_BRUKERS_DOED", false));
+
+		reinitTransaction();
+	}
+
+	void lagUgyldigeFagomraader() {
+		//Fagomraade_gen
+		fagomraadeRepository.persist(new Fagomraade(FAGOMRAADE_GEN, "10_AAR_ETTER_BRUKERS_DOED", false));
+		//null er en ugyldig bevaringstid
+		fagomraadeRepository.persist(new Fagomraade(FAGOMRAADE_UFO, null, false));
+		//100 aar etter brukers død er ikke støtta
+		fagomraadeRepository.persist(new Fagomraade(FAGOMRAADE_UFM, "100_AAR_ETTER_BRUKERS_DOED", false));
+		//avleverMedDok=null er ulovlig
+		fagomraadeRepository.persist(new Fagomraade(FAGOMRAADE_BIL, "10_AAR_ETTER_BRUKERS_DOED", null));
 
 		reinitTransaction();
 	}
@@ -319,4 +297,9 @@ public class Skass001ITest {
 				.getResultList();
 	}
 
+	private List<Sak> finnAlleSaker() {
+		return entityManager
+				.createQuery("select s from Sak s", Sak.class)
+				.getResultList();
+	}
 }
