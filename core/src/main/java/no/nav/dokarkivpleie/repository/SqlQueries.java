@@ -23,33 +23,4 @@ public class SqlQueries {
 			and dato_tom >= :opprettet_tidspunkt
 			""";
 
-	public static final String SLETTEBESTILLING_SQL = """
-			insert into joark.t_slettebestilling (
-				slettebestilling_id,
-				sak_id,
-				opprettet_kilde_navn,
-				opprettet_av_navn,
-				opprettet_av,
-				k_slettebestilling_status,
-				k_slettebestilling_type,
-				k_slettebestilling_hjemmel,
-				k_slettebestilling_arsak,
-				dato_utfores,
-				dato_opprettet,
-				begrunnelse)
-			values (
-				joark.t_slettebestilling_seq.nextval,
-				:sakId,
-				:opprettetKildeNavn,
-				:opprettetAvNavn,
-				:opprettetAv,
-				:slettebestillingStatus,
-				:slettebestillingType,
-				:slettebestillingHjemmel,
-				:slettebestillingArsak,
-				:datoUtfores,
-				:datoOpprettet,
-				:begrunnelse
-			)
-			""";
 }

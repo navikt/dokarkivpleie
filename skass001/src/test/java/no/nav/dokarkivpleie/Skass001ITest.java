@@ -1,7 +1,6 @@
 package no.nav.dokarkivpleie;
 
 import jakarta.persistence.EntityManager;
-import lombok.Builder;
 import no.nav.dokarkivpleie.config.CoreConfig;
 import no.nav.dokarkivpleie.config.RepositoryConfig;
 import no.nav.dokarkivpleie.consumers.dvh.DatavarehusFunctionalException;
@@ -10,11 +9,12 @@ import no.nav.dokarkivpleie.domain.Avleveringsstatus;
 import no.nav.dokarkivpleie.domain.Fagomraade;
 import no.nav.dokarkivpleie.domain.Sak;
 import no.nav.dokarkivpleie.domain.Saksstatus;
+import no.nav.dokarkivpleie.domain.Slettebestilling;
 import no.nav.dokarkivpleie.repository.AdministrativEnhetJdbcRepository;
 import no.nav.dokarkivpleie.repository.FagomraadeRepository;
 import no.nav.dokarkivpleie.repository.JournalpostJdbcRepository;
 import no.nav.dokarkivpleie.repository.SakRepository;
-import no.nav.dokarkivpleie.repository.SlettebestillingJdbcRepository;
+import no.nav.dokarkivpleie.repository.SlettebestillingRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -29,11 +29,8 @@ import org.springframework.test.context.transaction.TestTransaction;
 import org.springframework.transaction.annotation.Transactional;
 import org.wiremock.spring.EnableWireMock;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -49,6 +46,10 @@ import static no.nav.dokarkivpleie.MerkSakerBevaringstidPassertService.MERK_SAKE
 import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.BEVARINGSTID_PASSERT;
 import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT;
 import static no.nav.dokarkivpleie.domain.Saksstatus.AAPEN;
+import static no.nav.dokarkivpleie.domain.SlettebestillingArsak.BEVARINGSTID;
+import static no.nav.dokarkivpleie.domain.SlettebestillingHjemmel.ARK;
+import static no.nav.dokarkivpleie.domain.SlettebestillingStatus.OPPRETTET;
+import static no.nav.dokarkivpleie.domain.SlettebestillingType.DOKUMENTER_PA_SAK;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.tuple;
@@ -80,6 +81,9 @@ public class Skass001ITest {
 	private SakRepository sakRepository;
 
 	@Autowired
+	private SlettebestillingRepository slettebestillingRepository;
+
+	@Autowired
 	private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
 	@Autowired
@@ -92,9 +96,6 @@ public class Skass001ITest {
 	private AdministrativEnhetJdbcRepository administrativEnhetJdbcRepository;
 
 	@Autowired
-	private SlettebestillingJdbcRepository slettebestillingJdbcRepository;
-
-	@Autowired
 	private EntityManager entityManager;
 
 	@BeforeEach
@@ -105,8 +106,9 @@ public class Skass001ITest {
 		entityManager
 				.createQuery("delete from Fagomraade ")
 				.executeUpdate();
-
-		namedParameterJdbcTemplate.update("delete from joark.t_slettebestilling", Collections.emptyMap());
+		entityManager
+				.createQuery("delete from Slettebestilling")
+				.executeUpdate();
 	}
 
 	@Test
@@ -129,7 +131,7 @@ public class Skass001ITest {
 		assertThat(sak.getEndretKildeNavn()).isEqualTo(DOKARKIVPLEIE);
 		assertThat(sak.getDatoEndret()).isCloseTo(LocalDateTime.now(), within(10, SECONDS));
 
-		assertThat(getSlettebestillinger()).hasSize(0);
+		assertThat(antallSlettebestillinger()).isEqualTo(0);
 	}
 
 	@Test
@@ -152,9 +154,9 @@ public class Skass001ITest {
 		assertThat(sak.getEndretKildeNavn()).isEqualTo(DOKARKIVPLEIE);
 		assertThat(sak.getDatoEndret()).isCloseTo(LocalDateTime.now(), within(10, SECONDS));
 
-		assertThat(getSlettebestillinger()).hasSize(1)
+		assertThat(hentSlettebestillinger()).hasSize(1)
 				.extracting("sakId", "slettebestillingStatus", "slettebestillingType", "slettebestillingHjemmel", "slettebestillingArsak")
-				.containsExactly(tuple("123", "OPPRETTET", "DOKUMENTER_PA_SAK", "ARK", "BEVARINGSTID"));
+				.containsExactly(tuple(123L, OPPRETTET, DOKUMENTER_PA_SAK, ARK, BEVARINGSTID));
 	}
 
 	@ParameterizedTest
@@ -257,7 +259,7 @@ public class Skass001ITest {
 		assertThat(sak.getEndretKildeNavn()).isEqualTo(DOKARKIVPLEIE);
 		assertThat(sak.getDatoEndret()).isCloseTo(LocalDateTime.now(), within(10, SECONDS));
 
-		assertThat(getSlettebestillinger()).hasSize(0);
+		assertThat(hentSlettebestillinger()).hasSize(0);
 	}
 
 	@Test
@@ -305,43 +307,16 @@ public class Skass001ITest {
 						.withStatus(httpStatus.value())));
 	}
 
-	private List<Slettebestilling> getSlettebestillinger() {
-		return namedParameterJdbcTemplate.query(
-				"select * from joark.T_SLETTEBESTILLING",
-				Collections.emptyMap(),
-				(rs, _) -> mapRowToSlettebestilling(rs)
-		);
+	private Long antallSlettebestillinger() {
+		return (Long) entityManager
+				.createQuery("select count(s) from Slettebestilling s")
+				.getSingleResult();
 	}
 
-	@Builder
-	private record Slettebestilling(
-			String sakId,
-			String opprettetKildeNavn,
-			String opprettetAvNavn,
-			String opprettetAv,
-			String slettebestillingStatus,
-			String slettebestillingType,
-			String slettebestillingHjemmel,
-			String slettebestillingArsak,
-			LocalDate datoUtfores,
-			LocalDateTime datoOpprettet,
-			String begrunnelse
-	) {
+	private List<Slettebestilling> hentSlettebestillinger() {
+		return entityManager
+				.createQuery("select s from Slettebestilling s", Slettebestilling.class)
+				.getResultList();
 	}
 
-	private Slettebestilling mapRowToSlettebestilling(ResultSet rs) throws SQLException {
-		return Slettebestilling.builder()
-				.sakId(rs.getString("SAK_ID"))
-				.opprettetKildeNavn(rs.getString("OPPRETTET_KILDE_NAVN"))
-				.opprettetAvNavn(rs.getString("OPPRETTET_AV_NAVN"))
-				.opprettetAv(rs.getString("OPPRETTET_AV"))
-				.slettebestillingStatus(rs.getString("K_SLETTEBESTILLING_STATUS"))
-				.slettebestillingType(rs.getString("K_SLETTEBESTILLING_TYPE"))
-				.slettebestillingHjemmel(rs.getString("K_SLETTEBESTILLING_HJEMMEL"))
-				.slettebestillingArsak(rs.getString("K_SLETTEBESTILLING_ARSAK"))
-				.datoUtfores(rs.getDate("DATO_UTFORES") != null ? rs.getDate("DATO_UTFORES").toLocalDate() : null)
-				.datoOpprettet(rs.getTimestamp("DATO_OPPRETTET") != null ? rs.getTimestamp("DATO_OPPRETTET").toLocalDateTime() : null)
-				.begrunnelse(rs.getString("BEGRUNNELSE"))
-				.build();
-	}
 }
