@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import no.nav.dokarkivpleie.consumers.dvh.DatavarehusFunctionalException;
 import no.nav.dokarkivpleie.consumers.dvh.DatavarehusTechnicalException;
 import no.nav.dokarkivpleie.service.AdministrativEnhetService;
+import no.nav.dokarkivpleie.slack.SlackService;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,27 +18,29 @@ public class MerkSakerBevaringstidPassertScheduler {
 
 	private final MerkSakerBevaringstidPassertService merkSakerBevaringstidPassertService;
 	private final AdministrativEnhetService administrativEnhetService;
+	private final SlackService slackService;
 
 	MerkSakerBevaringstidPassertScheduler(MerkSakerBevaringstidPassertService merkSakerBevaringstidPassertService,
-										  AdministrativEnhetService administrativEnhetService) {
+										  AdministrativEnhetService administrativEnhetService,
+										  SlackService slackService) {
 		this.merkSakerBevaringstidPassertService = merkSakerBevaringstidPassertService;
 		this.administrativEnhetService = administrativEnhetService;
+		this.slackService = slackService;
 	}
 
 	//TODO: Skru på scheduled når vi er ferdige med karp001
 	//@Scheduled(initialDelay = 10000L)
 	public void kjoerPeriodiskJobb() {
-		log.info("Starter periodisk jobb for å markere saker der bevaringstid har passert for tema={}.", TEMA_MED_STOETTEDE_BEVARINGSTIDER);
+		log.info("Starter Skass001 for å markere saker der bevaringstid har passert for tema={}.", TEMA_MED_STOETTEDE_BEVARINGSTIDER);
 
 		try {
 			administrativEnhetService.hentAdministrativeEnheterFraDatavarehus();
-		} catch (DatavarehusFunctionalException | DatavarehusTechnicalException e) {
-			log.error("Merksakerbevaringstidpassert feilet mot dvh med exception: ", e);
-			return;
-		}
-
-		for (String tema : TEMA_MED_STOETTEDE_BEVARINGSTIDER) {
-			merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(tema);
+			for (String tema : TEMA_MED_STOETTEDE_BEVARINGSTIDER) {
+				merkSakerBevaringstidPassertService.merkSakerBevaringstidPassert(tema);
+			}
+		} catch (Exception e) {
+			log.error("Skass001 feilet med exception: ", e);
+			slackService.sendMelding("Skass001 har feilet. Avslutter dagens kjøring - dette må undersøkes.");
 		}
 
 		log.info("Periodisk jobb for å markere saker der bevaringstid har passert for tema={} er avsluttet.", TEMA_MED_STOETTEDE_BEVARINGSTIDER);
