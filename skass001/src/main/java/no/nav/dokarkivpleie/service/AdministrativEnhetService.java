@@ -104,16 +104,16 @@ public class AdministrativEnhetService {
 		return journalfoertDato.isEqual(gyldigFraDato) || journalfoertDato.isAfter(gyldigFraDato);
 	}
 
+	private boolean harDataForKontor(List<AdministrativEnhet> gyldigeKontorer, String fagsystem) {
+		return gyldigeKontorer.stream()
+				.anyMatch(ae -> ae.kontortype().equals(fagsystem));
+	}
+
 	private Optional<String> hentKontornavn(List<AdministrativEnhet> gyldigeKontorer, String fagsystem) {
 		return gyldigeKontorer.stream()
 				.filter(ae -> fagsystem.equals(ae.kontortype()))
 				.map(AdministrativEnhet::kontornavn)
 				.findFirst();
-	}
-
-	private boolean harDataForKontor(List<AdministrativEnhet> gyldigeKontorer, String fagsystem) {
-		return gyldigeKontorer.stream()
-				.anyMatch(ae -> ae.kontortype().equals(fagsystem));
 	}
 
 }

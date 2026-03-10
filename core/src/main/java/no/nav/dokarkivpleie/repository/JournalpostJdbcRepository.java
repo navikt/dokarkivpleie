@@ -28,6 +28,7 @@ public class JournalpostJdbcRepository {
 		return namedParameterJdbcTemplate.query(HENT_JOURNALPOSTER_FOR_SAKER, params, new JournalpostRowMapper());
 	}
 
+	// Merk at journaldato og journalf_enhet kan være null i databasen
 	public static class JournalpostRowMapper implements RowMapper<Journalpost> {
 		@Override
 		public Journalpost mapRow(ResultSet rs, int rowNum) throws SQLException {

@@ -35,6 +35,8 @@ public class JournalpostJdbcRepositoryTest {
 				.containsExactlyInAnyOrder(
 						tuple(OPPRETTETDATO_JP_123, JOURNALDATO_JP_123, "FL", "1234"),
 						tuple(OPPRETTETDATO_JP_123, JOURNALDATO_JP_123, "E", "1234"),
+						tuple(OPPRETTETDATO_JP_123, JOURNALDATO_JP_123, "E", null),
+						tuple(OPPRETTETDATO_JP_123, null, "E", "1234"),
 						tuple(OPPRETTETDATO_JP_234, JOURNALDATO_JP_234, "FS", "5678")
 				);
 	}

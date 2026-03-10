@@ -47,7 +47,7 @@ public class MerkSakerBevaringstidPassertService {
 		log.info("Har hentet {} døde personer for merking av saker der bevaringstid er passert", fnrTilPersonerSomHarVaertDoedeLengerEnnBevaringstid.size());
 
 		List<List<String>> partisjonertDoedePersonerList = Lists.partition(fnrTilPersonerSomHarVaertDoedeLengerEnnBevaringstid.stream().toList(), 200);
-		partisjonertDoedePersonerList.forEach(doedePersonerPartisjon -> arkivsakService.kasserSakerForDoedePersoner(doedePersonerPartisjon, tema, fagomraade));
+		partisjonertDoedePersonerList.forEach(doedePersonerPartisjon -> arkivsakService.kasserSakerForDoedePersoner(doedePersonerPartisjon, fagomraade));
 	}
 
 	private int hentBevaringstidForFagomraade(Fagomraade fagomraade) {

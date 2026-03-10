@@ -53,29 +53,30 @@ public class ArkivsakService {
 	}
 
 	@Transactional(propagation = REQUIRES_NEW)
-	public void kasserSakerForDoedePersoner(List<String> doedePersonerPartisjon, String tema, Fagomraade fagomraade) {
-		Set<Sak> sakerForDoedePersoner = sakRepository.finnUkasserteSakerForBrukere(doedePersonerPartisjon, tema);
+	public void kasserSakerForDoedePersoner(List<String> doedePersonerPartisjon, Fagomraade fagomraade) {
+		Set<Sak> sakerForDoedePersoner = sakRepository.finnUkasserteSakerForBrukere(doedePersonerPartisjon, fagomraade.getKode());
 
 		List<Arkivsak> arkivsaker = mapSakerTilArkivsaker(sakerForDoedePersoner);
 
 		for (Arkivsak arkivsak : arkivsaker) {
-			//3.1
+			List<Long> saksIderTilArkivsak = arkivsak.saksIder();
+
+			// Arkivsaker der alle saker er null eller AAPEN må først avsluttes eller avbrytes
 			if (arkivsak.harKunAapneSaker()) {
 				hentJournalposterForArkivsak(arkivsak);
 
 				if (arkivsak.harUferdigeJournalposter()) {
-					// Her blir også dei statusane som ikkje er uferdige tatt med i logginga
-					log.info("Kan ikke avslutte arkivsak med saksIder={} siden journalpoststatuser={} inneholder midlertidige statuser. Avbryter behandling av arkivsak.", arkivsak.saksIder(), arkivsak.journalpoststatuser());
+					log.info("Kan ikke avslutte arkivsak med saksIder={} siden journalpoststatuser={} inneholder midlertidige statuser. Avbryter behandling av arkivsak.", saksIderTilArkivsak, arkivsak.journalpoststatuser());
 					return;
 				}
 
 				if (arkivsak.harIngenFerdigstilteJournalposter()) {
-					log.info("Arkivsak har ingen ferdigstilte journalposter. Avbryter saker={} knyttet til tom arkivsak.", arkivsak.saksIder());
+					log.info("Arkivsak har ingen ferdigstilte journalposter. Avbryter saker={} knyttet til tom arkivsak.", saksIderTilArkivsak);
 					avbrytArkivsak(arkivsak);
 				} else {
 					String administrativEnhetNavn = finnAdministrativEnhet(arkivsak, fagomraade);
 					if (administrativEnhetNavn == null) {
-						log.warn("Kan ikke avslutte arkivsak med saksIder={} uten administrativ enhet. Avbryter behandling av arkivsak.", arkivsak.saksIder());
+						log.warn("Kan ikke avslutte arkivsak med saksIder={} uten administrativ enhet. Avbryter behandling av arkivsak.", saksIderTilArkivsak);
 						return;
 					}
 					avsluttArkivsak(arkivsak, administrativEnhetNavn);
@@ -85,12 +86,17 @@ public class ArkivsakService {
 			if (fagomraade.getAvleverMedDok()) {
 				oppdaterKassasjonsstatus(arkivsak, BEVARINGSTID_PASSERT);
 			} else {
-				lagreSlettebestillingerForArkivsak(arkivsak.saksIder(), fagomraade.getBevaringstid());
+				lagreSlettebestillingerForArkivsak(saksIderTilArkivsak, fagomraade.getBevaringstid());
 				oppdaterKassasjonsstatus(arkivsak, BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT);
 			}
 
-			log.info("Har fullført en loop av merkSakerBevaringstidPassert for arkivsak");
+			log.info("Behandling av arkivsaker for 200 personer er ferdig");
 		}
+	}
+
+	private void hentJournalposterForArkivsak(Arkivsak arkivsak) {
+		var journalposter = journalpostJdbcRepository.hentJournalposterForSaker(arkivsak.saksIder());
+		arkivsak.journalposter().addAll(journalposter);
 	}
 
 	private String finnAdministrativEnhet(Arkivsak arkivsak, Fagomraade fagomraade) {
@@ -111,11 +117,6 @@ public class ArkivsakService {
 			}
 		}
 		return null;
-	}
-
-	private void hentJournalposterForArkivsak(Arkivsak arkivsak) {
-		var journalposter = journalpostJdbcRepository.hentJournalposterForSaker(arkivsak.saksIder());
-		arkivsak.journalposter().addAll(journalposter);
 	}
 
 	private void avbrytArkivsak(Arkivsak arkivsak) {
