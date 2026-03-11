@@ -64,9 +64,9 @@ public class ArkivsakService {
 			// Arkivsaker der alle saker er null eller AAPEN må først avsluttes eller avbrytes
 			//TODO: Alex; er dette riktig?
 			if (arkivsak.harKunAapneSaker()) {
-				hentJournalposterForArkivsak(arkivsak);
+				populerArkivsakMedJournalposter(arkivsak);
 
-				if (arkivsak.harUferdigeJournalposter()) {
+				if (arkivsak.harJournalposterIMidlertidigeStatuser()) {
 					log.info("Kan ikke avslutte arkivsak med saksIder={} siden journalpoststatuser={} inneholder midlertidige statuser. Avbryter behandling av arkivsak.", saksIderTilArkivsak, arkivsak.journalpoststatuser());
 					return;
 				}
@@ -95,7 +95,7 @@ public class ArkivsakService {
 		}
 	}
 
-	private void hentJournalposterForArkivsak(Arkivsak arkivsak) {
+	private void populerArkivsakMedJournalposter(Arkivsak arkivsak) {
 		var journalposter = journalpostJdbcRepository.hentJournalposterForSaker(arkivsak.saksIder());
 		arkivsak.journalposter().addAll(journalposter);
 	}

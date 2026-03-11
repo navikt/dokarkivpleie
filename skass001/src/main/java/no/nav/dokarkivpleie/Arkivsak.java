@@ -51,7 +51,7 @@ public record Arkivsak(
 		return journalposter.stream().noneMatch(journalpost -> FERDIGSTILTE_JOURNALPOSTSTATUSER.contains(journalpost.journalstatus()));
 	}
 
-	public boolean harUferdigeJournalposter() {
+	public boolean harJournalposterIMidlertidigeStatuser() {
 		return !Collections.disjoint(journalpoststatuser(), MIDLERTIDIGE_JOURNALPOSTSTATUSER);
 	}
 
