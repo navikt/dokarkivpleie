@@ -3,6 +3,7 @@ package no.nav.dokarkivpleie;
 import lombok.extern.slf4j.Slf4j;
 import no.nav.dokarkivpleie.service.AdministrativEnhetService;
 import no.nav.dokarkivpleie.slack.SlackService;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -26,8 +27,7 @@ public class MerkSakerBevaringstidPassertScheduler {
 		this.slackService = slackService;
 	}
 
-	//TODO: Skru på scheduled når vi er ferdige med karp001
-	//@Scheduled(initialDelay = 10000L)
+	@Scheduled(initialDelay = 10000L)
 	public void kjoerPeriodiskJobb() {
 		log.info("Starter Skass001 for å markere saker der bevaringstid har passert for tema={}.", TEMA_MED_STOETTEDE_BEVARINGSTIDER);
 
