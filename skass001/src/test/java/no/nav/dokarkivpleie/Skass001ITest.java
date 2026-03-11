@@ -251,7 +251,7 @@ public class Skass001ITest {
 	}
 
 	@Test
-	void skalAvslutteKjoeringenDersomDatavarehusKaster4xx() {
+	void skalIkkeGiRetryVedFunksjonellFeilMotDvh() {
 		stubDvh(BAD_REQUEST);
 
 		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
@@ -260,7 +260,7 @@ public class Skass001ITest {
 	}
 
 	@Test
-	void skalAvslutteKjoeringenDersomDatavarehusKaster5xx() {
+	void skalAvslutteKjoeringenEtterRetriesVedTekniskFeilMotDvh() {
 		stubDvh(INTERNAL_SERVER_ERROR);
 
 		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
