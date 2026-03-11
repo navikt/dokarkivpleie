@@ -62,6 +62,7 @@ public class ArkivsakService {
 			List<Long> saksIderTilArkivsak = arkivsak.saksIder();
 
 			// Arkivsaker der alle saker er null eller AAPEN må først avsluttes eller avbrytes
+			//TODO: Alex; er dette riktig?
 			if (arkivsak.harKunAapneSaker()) {
 				hentJournalposterForArkivsak(arkivsak);
 
@@ -102,7 +103,6 @@ public class ArkivsakService {
 	private String finnAdministrativEnhet(Arkivsak arkivsak, Fagomraade fagomraade) {
 		String enhetsnavnFraDvh = hentNavnFraDvh(arkivsak);
 		if (isBlank(enhetsnavnFraDvh)) {
-			// TODO: Kva skjer viss opprettetTidspunktForEldsteSak er null? Sjekk i db
 			return administrativEnhetJdbcRepository.hentNavnForAdministrativEnhet(fagomraade.getKode(), arkivsak.finnOpprettetTidspunktForEldsteSak());
 		}
 		return enhetsnavnFraDvh;

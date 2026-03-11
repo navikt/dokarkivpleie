@@ -30,7 +30,6 @@ public class AdministrativEnhetService {
 		this.datavarehusConsumer = datavarehusConsumer;
 	}
 
-	//TODO: Skal denne returnere listen i steden for å lagre den?
 	public void hentAdministrativeEnheterFraDatavarehus() {
 		log.info("Populerer administrativEnhetMap med data fra datavarehus");
 
@@ -81,11 +80,11 @@ public class AdministrativEnhetService {
 			return hentKontornavn(gyldigeKontorer, KONTORTYPE_NORG);
 		}
 
-		if (!harDataForKontor(gyldigeKontorer, KONTORTYPE_NORG) && harDataForKontor(gyldigeKontorer, KONTORTYPE_INFOTRYGD)) {
+		if (harDataForKontor(gyldigeKontorer, KONTORTYPE_INFOTRYGD)) {
 			return hentKontornavn(gyldigeKontorer, KONTORTYPE_INFOTRYGD);
 		}
 
-		if (!harDataForKontor(gyldigeKontorer, KONTORTYPE_NORG) && harDataForKontor(gyldigeKontorer, KONTORTYPE_ARENA)) {
+		if (harDataForKontor(gyldigeKontorer, KONTORTYPE_ARENA)) {
 			return hentKontornavn(gyldigeKontorer, KONTORTYPE_ARENA);
 		}
 

@@ -1,8 +1,6 @@
 package no.nav.dokarkivpleie;
 
 import lombok.extern.slf4j.Slf4j;
-import no.nav.dokarkivpleie.consumers.dvh.DatavarehusFunctionalException;
-import no.nav.dokarkivpleie.consumers.dvh.DatavarehusTechnicalException;
 import no.nav.dokarkivpleie.service.AdministrativEnhetService;
 import no.nav.dokarkivpleie.slack.SlackService;
 import org.springframework.stereotype.Component;
