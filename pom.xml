@@ -36,7 +36,7 @@
 
 		<logstash-logback-encoder.version>9.0</logstash-logback-encoder.version>
 		<guava.version>33.5.0-jre</guava.version>
-		<kafka-avro-serializer.version>8.1.1</kafka-avro-serializer.version>
+		<kafka-avro-serializer.version>8.2.0</kafka-avro-serializer.version>
 
 		<wiremock-spring-boot.version>4.2.0</wiremock-spring-boot.version>
 	</properties>
