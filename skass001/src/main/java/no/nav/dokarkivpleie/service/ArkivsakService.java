@@ -12,6 +12,7 @@ import no.nav.dokarkivpleie.repository.AdministrativEnhetJdbcRepository;
 import no.nav.dokarkivpleie.repository.JournalpostJdbcRepository;
 import no.nav.dokarkivpleie.repository.SakRepository;
 import no.nav.dokarkivpleie.repository.SlettebestillingRepository;
+import no.nav.dokarkivpleie.slack.SlackService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,17 +40,20 @@ public class ArkivsakService {
 	private final AdministrativEnhetService administrativEnhetService;
 	private final AdministrativEnhetJdbcRepository administrativEnhetJdbcRepository;
 	private final SlettebestillingRepository slettebestillingRepository;
+	private final SlackService slackService;
 
 	ArkivsakService(SakRepository sakRepository,
 					JournalpostJdbcRepository journalpostJdbcRepository,
 					AdministrativEnhetService administrativEnhetService,
 					AdministrativEnhetJdbcRepository administrativEnhetJdbcRepository,
-					SlettebestillingRepository slettebestillingRepository) {
+					SlettebestillingRepository slettebestillingRepository,
+					SlackService slackService) {
 		this.sakRepository = sakRepository;
 		this.journalpostJdbcRepository = journalpostJdbcRepository;
 		this.administrativEnhetService = administrativEnhetService;
 		this.administrativEnhetJdbcRepository = administrativEnhetJdbcRepository;
 		this.slettebestillingRepository = slettebestillingRepository;
+		this.slackService = slackService;
 	}
 
 	@Transactional(propagation = REQUIRES_NEW)
@@ -61,24 +65,29 @@ public class ArkivsakService {
 		for (Arkivsak arkivsak : arkivsaker) {
 			List<Long> saksIderTilArkivsak = arkivsak.saksIder();
 
-			// Arkivsaker der alle saker er null eller AAPEN må først avsluttes eller avbrytes
-			//TODO: Alex; er dette riktig?
+			if (arkivsak.harBaadeAapneOgLukkedeSaker()) {
+				log.error("Arkivsak inneholder saker med både åpne og lukkede saksstatuser med saksIder={}. Avbryter behandling av arkivsak.", saksIderTilArkivsak);
+				slackService.sendMelding("Ugyldig arkivsak!", "Arkivsak inneholder saker med både åpne og lukkede saksstatuser med saksIder=%s.".formatted(saksIderTilArkivsak));
+				continue;
+			}
+
 			if (arkivsak.harKunAapneSaker()) {
 				populerArkivsakMedJournalposter(arkivsak);
 
 				if (arkivsak.harJournalposterIMidlertidigeStatuser()) {
 					log.info("Kan ikke avslutte arkivsak med saksIder={} siden journalpoststatuser={} inneholder midlertidige statuser. Avbryter behandling av arkivsak.", saksIderTilArkivsak, arkivsak.journalpoststatuser());
-					return;
+					continue;
 				}
 
 				if (arkivsak.harIngenFerdigstilteJournalposter()) {
 					log.info("Arkivsak har ingen ferdigstilte journalposter. Avbryter saker={} knyttet til tom arkivsak.", saksIderTilArkivsak);
 					avbrytArkivsak(arkivsak);
+					continue;
 				} else {
 					String administrativEnhetNavn = finnAdministrativEnhet(arkivsak, fagomraade);
 					if (administrativEnhetNavn == null) {
 						log.warn("Kan ikke avslutte arkivsak med saksIder={} uten administrativ enhet. Avbryter behandling av arkivsak.", saksIderTilArkivsak);
-						return;
+						continue;
 					}
 					avsluttArkivsak(arkivsak, administrativEnhetNavn);
 				}
@@ -91,7 +100,7 @@ public class ArkivsakService {
 				oppdaterKassasjonsstatus(arkivsak, BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT);
 			}
 
-			log.info("Behandling av arkivsaker for 200 personer er ferdig");
+			log.info("Behandling av arkivsaker for opptil 200 personer er ferdig");
 		}
 	}
 

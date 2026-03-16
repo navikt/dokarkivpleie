@@ -33,8 +33,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static no.nav.dokarkivpleie.MerkSakerBevaringstidPassertService.DOKARKIVPLEIE;
 import static no.nav.dokarkivpleie.MerkSakerBevaringstidPassertService.MERK_SAKER_BEVARINGSTID_PASSERT;
-import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.BEVARINGSTID_PASSERT;
 import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT;
+import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.KLAR_FOR_KASSASJON;
 import static no.nav.dokarkivpleie.domain.Saksstatus.AAPEN;
 import static no.nav.dokarkivpleie.domain.Saksstatus.AVBRUTT;
 import static no.nav.dokarkivpleie.domain.Saksstatus.AVSLUTTET;
@@ -95,14 +95,14 @@ public class Skass001ITest {
 	}
 
 	@Test
-	void skalIkkeAvbryteEllerAvslutteArkivsakDersomNoenAvSakeneIkkeErAapneOgAvleverMedDokErTrue() {
+	void skalHoppeOverArkivsakMedBaadeAapneOgLukkedeSaker() {
 		stubDvh("response.json");
 		lagFagomraader();
 
 		List<Sak> sakerSomSkalLagres = List.of(
-				Sak.builder().sakId(123L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build(),
-				Sak.builder().sakId(124L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AVSLUTTET).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build(),
-				Sak.builder().sakId(125L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AVBRUTT).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build()
+				Sak.builder().sakId(123L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").fagsakNr("123").saksstatus(AAPEN).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build(),
+				Sak.builder().sakId(124L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").fagsakNr("123").saksstatus(AVSLUTTET).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build(),
+				Sak.builder().sakId(125L).tema(FAGOMRAADE_AAP).aktoerId("2556016505784").applikasjon("FS22").fagsakNr("321").saksstatus(AAPEN).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build()
 		);
 		sakRepository.persistAll(sakerSomSkalLagres);
 		reinitTransaction();
@@ -111,49 +111,14 @@ public class Skass001ITest {
 
 		List<Sak> saker = finnAlleSaker();
 		assertThat(saker)
-				.extracting(Sak::getSaksstatus, Sak::getKassasjonsstatus, Sak::getEndretAv, Sak::getEndretKildeNavn, Sak::getAvleveringsstatus, Sak::getDatoAvsluttet, Sak::getAvsluttetAv, Sak::getAvsluttetKildeNavn)
+				.extracting(Sak::getSakId, Sak::getSaksstatus, Sak::getKassasjonsstatus, Sak::getEndretAv, Sak::getEndretKildeNavn)
 				.containsExactlyInAnyOrder(
-						tuple(AAPEN, BEVARINGSTID_PASSERT, MERK_SAKER_BEVARINGSTID_PASSERT, DOKARKIVPLEIE, null, null, null, null),
-						tuple(AVSLUTTET, BEVARINGSTID_PASSERT, MERK_SAKER_BEVARINGSTID_PASSERT, DOKARKIVPLEIE, null, null, null, null),
-						tuple(AVBRUTT, BEVARINGSTID_PASSERT, MERK_SAKER_BEVARINGSTID_PASSERT, DOKARKIVPLEIE, null, null, null, null)
+						tuple(123L, AAPEN, null, null, null),
+						tuple(124L, AVSLUTTET, null, null, null),
+						tuple(125L, AVBRUTT, KLAR_FOR_KASSASJON, MERK_SAKER_BEVARINGSTID_PASSERT, DOKARKIVPLEIE)
 				);
-
-		assertThat(saker)
-				.extracting(Sak::getDatoEndret)
-				.allSatisfy(datoEndret -> assertThat(datoEndret).isCloseTo(LocalDateTime.now(), within(10, SECONDS)));
 
 		assertThat(antallSlettebestillinger()).isEqualTo(0);
-	}
-
-	@Test
-	void skalIkkeAvbryteEllerAvslutteArkivsakDersomNoenAvSakeneIkkeErAapneOgAvleverMedDokErFalse() {
-		stubDvh("response.json");
-		lagFagomraader();
-
-		List<Sak> sakerSomSkalLagres = List.of(
-				Sak.builder().sakId(123L).tema(FAGOMRAADE_ENF).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AAPEN).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build(),
-				Sak.builder().sakId(124L).tema(FAGOMRAADE_ENF).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AVSLUTTET).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build(),
-				Sak.builder().sakId(125L).tema(FAGOMRAADE_ENF).aktoerId("2556016505784").applikasjon("FS22").saksstatus(AVBRUTT).brukerId("07417813777").brukerIdType("FNR").doedsdato(DOEDSDATO_MER_ENN_10_AAR_SIDEN).build()
-		);
-		sakRepository.persistAll(sakerSomSkalLagres);
-		reinitTransaction();
-
-		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
-
-		List<Sak> saker = finnAlleSaker();
-		assertThat(saker)
-				.extracting(Sak::getSaksstatus, Sak::getKassasjonsstatus, Sak::getEndretAv, Sak::getEndretKildeNavn, Sak::getAvleveringsstatus, Sak::getDatoAvsluttet, Sak::getAvsluttetAv, Sak::getAvsluttetKildeNavn)
-				.containsExactlyInAnyOrder(
-						tuple(AAPEN, BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT, MERK_SAKER_BEVARINGSTID_PASSERT, DOKARKIVPLEIE, null, null, null, null),
-						tuple(AVSLUTTET, BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT, MERK_SAKER_BEVARINGSTID_PASSERT, DOKARKIVPLEIE, null, null, null, null),
-						tuple(AVBRUTT, BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT, MERK_SAKER_BEVARINGSTID_PASSERT, DOKARKIVPLEIE, null, null, null, null)
-				);
-
-		assertThat(saker)
-				.extracting(Sak::getDatoEndret)
-				.allSatisfy(datoEndret -> assertThat(datoEndret).isCloseTo(LocalDateTime.now(), within(10, SECONDS)));
-
-		assertThat(antallSlettebestillinger()).isEqualTo(3);
 	}
 
 	// SakId 345 har en journalpost i status M (ligger i schema.sql)
@@ -181,7 +146,7 @@ public class Skass001ITest {
 	// SakId 346 har en journalpost i status U
 	// Lag ein journalpost med status U, A eller UB slik at ein unngår harJournalposterIMidlertidigeStatuser-sjekken
 	@Test
-	void skalAvbryteOgKassereTomArkivsakDerAvleverMedDokErTrue() {
+	void skalAvbryteUtenAaKassereForTomArkivsak() {
 		stubDvh("response.json");
 		lagFagomraader();
 
@@ -196,7 +161,7 @@ public class Skass001ITest {
 		Sak sak = sakRepository.findById(346L).get();
 		assertThat(sak.getSaksstatus()).isEqualTo(AVBRUTT);
 		assertThat(sak.getAvleveringsstatus()).isEqualTo(Avleveringsstatus.AVBRUTT);
-		assertThat(sak.getKassasjonsstatus()).isEqualTo(BEVARINGSTID_PASSERT);
+		assertThat(sak.getKassasjonsstatus()).isEqualTo(KLAR_FOR_KASSASJON);
 		assertThat(sak.getEndretAv()).isEqualTo(MERK_SAKER_BEVARINGSTID_PASSERT);
 		assertThat(sak.getEndretKildeNavn()).isEqualTo(DOKARKIVPLEIE);
 		assertThat(sak.getDatoEndret()).isCloseTo(LocalDateTime.now(), within(10, SECONDS));

@@ -2,11 +2,13 @@ package no.nav.dokarkivpleie;
 
 import no.nav.dokarkivpleie.domain.Journalpost;
 import no.nav.dokarkivpleie.domain.Sak;
+import no.nav.dokarkivpleie.domain.Saksstatus;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -16,6 +18,9 @@ import static java.util.Comparator.naturalOrder;
 import static no.nav.dokarkivpleie.domain.JournalpostStatus.FERDIGSTILTE_JOURNALPOSTSTATUSER;
 import static no.nav.dokarkivpleie.domain.JournalpostStatus.MIDLERTIDIGE_JOURNALPOSTSTATUSER;
 import static no.nav.dokarkivpleie.domain.Saksstatus.AAPEN;
+import static no.nav.dokarkivpleie.domain.Saksstatus.AVBRUTT;
+import static no.nav.dokarkivpleie.domain.Saksstatus.AVLEVERT;
+import static no.nav.dokarkivpleie.domain.Saksstatus.AVSLUTTET;
 import static org.apache.logging.log4j.util.Strings.isBlank;
 
 public record Arkivsak(
@@ -30,6 +35,7 @@ public record Arkivsak(
 	}
 
 	public static final String MASKINELL_JOURNALFOERENDE_ENHET = "9999";
+	public static final EnumSet<Saksstatus> LUKKEDE_STATUSER = EnumSet.of(AVBRUTT, AVSLUTTET, AVLEVERT);
 
 	public List<Long> saksIder() {
 		return saker.stream()
@@ -41,6 +47,13 @@ public record Arkivsak(
 		return journalposter.stream()
 				.map(Journalpost::journalstatus)
 				.collect(Collectors.toSet());
+	}
+
+	public boolean harBaadeAapneOgLukkedeSaker() {
+		boolean inneholderAapneStatuser = saker.stream().anyMatch(sak -> sak.getSaksstatus() == null || AAPEN.equals(sak.getSaksstatus()));
+		boolean inneholderLukkedeStatuser = saker.stream().anyMatch(sak ->  LUKKEDE_STATUSER.contains(sak.getSaksstatus()));
+
+		return inneholderAapneStatuser && inneholderLukkedeStatuser;
 	}
 
 	public boolean harKunAapneSaker() {

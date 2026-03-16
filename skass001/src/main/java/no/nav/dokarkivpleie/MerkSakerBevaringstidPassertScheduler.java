@@ -38,7 +38,7 @@ public class MerkSakerBevaringstidPassertScheduler {
 			}
 		} catch (Exception e) {
 			log.error("Skass001 feilet med exception: ", e);
-			slackService.sendMelding("Skass001 har feilet. Avslutter dagens kjøring - dette må undersøkes.");
+			slackService.sendMelding("Skedulert jobb feilet!", "Skass001 har feilet. Avslutter dagens kjøring - dette må undersøkes.");
 		}
 
 		log.info("Periodisk jobb for å markere saker der bevaringstid har passert for tema={} er avsluttet.", TEMA_MED_STOETTEDE_BEVARINGSTIDER);

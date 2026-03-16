@@ -24,12 +24,12 @@ import java.util.Arrays;
 		 this.slackClient = slackClient;
 	 }
 
-	 public void sendMelding(String melding) {
+	 public void sendMelding(String tittel, String feilmelding) {
 		 if (slackProperties.alertsEnabled()) {
 			 try {
-				 log.info("Sender melding til Slack med melding={}", melding);
+				 log.info("Sender melding til Slack med melding={}", feilmelding);
 
-				 var response = slackClient.chatPostMessage(jobbFeiletMelding(melding));
+				 var response = slackClient.chatPostMessage(jobbFeiletMelding(tittel, feilmelding));
 
 				 var result = response.isOk() ? "OK" : response.getError();
 				 log.info("Sendte melding med ts={} til Slack med resultat={}", response.getTs(), result);
@@ -40,8 +40,8 @@ import java.util.Arrays;
 		 }
 	 }
 
-	 private ChatPostMessageRequest jobbFeiletMelding(String feilmelding) {
-		 String headerText = ":rotating_light: Skedulert jobb feilet!";
+	 private ChatPostMessageRequest jobbFeiletMelding(String tittel, String feilmelding) {
+		 String headerText = ":rotating_light: %s".formatted(tittel);
 		 String bodyText = """
 				  *Applikasjon:* dokarkivpleie
 				  *Feilmelding:* %s
