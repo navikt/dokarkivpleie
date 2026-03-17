@@ -82,8 +82,8 @@ public class Slettebestilling {
 	@Column(name = "opprettet_av_navn", length = LARGE_LENGTH, nullable = false)
 	private String opprettetAvNavn;
 
-	@Column(name = "opprettet_av_kilde_navn", length = LARGE_LENGTH, nullable = false)
-	private String opprettetAvKildeNavn;
+	@Column(name = "opprettet_kilde_navn", length = LARGE_LENGTH, nullable = false)
+	private String opprettetKildeNavn;
 
 	public static Slettebestilling lagSlettebestilling(Long sakId, String begrunnelse) {
 		return Slettebestilling.builder()
@@ -97,7 +97,7 @@ public class Slettebestilling {
 				.datoOpprettet(LocalDateTime.now())
 				.opprettetAv(MERK_SAKER_BEVARINGSTID_PASSERT)
 				.opprettetAvNavn(MERK_SAKER_BEVARINGSTID_PASSERT)
-				.opprettetAvKildeNavn(DOKARKIVPLEIE)
+				.opprettetKildeNavn(DOKARKIVPLEIE)
 				.build();
 	}
 
