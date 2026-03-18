@@ -44,7 +44,7 @@ public class Slettebestilling {
 
 	@Id
 	@GeneratedValue(strategy = SEQUENCE, generator = SLETTEBESTILLING_SEQUENCE)
-	@SequenceGenerator(name = SLETTEBESTILLING_SEQUENCE, sequenceName = DATABASE_SLETTEBESTILLING_SEQUENCE, allocationSize = 1)
+	@SequenceGenerator(name = SLETTEBESTILLING_SEQUENCE, sequenceName = DATABASE_SLETTEBESTILLING_SEQUENCE)
 	@Column(name = "slettebestilling_id", nullable = false)
 	private long slettebestillingId;
 
