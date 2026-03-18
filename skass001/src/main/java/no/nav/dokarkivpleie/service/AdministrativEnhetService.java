@@ -45,7 +45,6 @@ public class AdministrativEnhetService {
 				eldsteFerdigstilteJournalpost.journalfoerendeEnhet(), eldsteFerdigstilteJournalpost.journaldato(), arkivsak.applikasjon());
 
 		if (administrativEnhetOptional.isEmpty()) {
-			log.info("Fant ikke historisk navn for administrativ enhet for arkivsak med saksIder={}", arkivsak.saksIder());
 			return null;
 		}
 		return administrativEnhetOptional.get();

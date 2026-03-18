@@ -86,7 +86,7 @@ public class ArkivsakService {
 				} else {
 					String administrativEnhetNavn = finnAdministrativEnhet(arkivsak, fagomraade);
 					if (administrativEnhetNavn == null) {
-						log.warn("Kan ikke avslutte arkivsak med saksIder={} uten administrativ enhet. Avbryter behandling av arkivsak.", saksIderTilArkivsak);
+						log.warn("Fant ikke administrativ enhet for arkivsak med saksIder={}. Avbryter behandling av arkivsak.", saksIderTilArkivsak);
 						continue;
 					}
 					avsluttArkivsak(arkivsak, administrativEnhetNavn);
@@ -112,6 +112,7 @@ public class ArkivsakService {
 	private String finnAdministrativEnhet(Arkivsak arkivsak, Fagomraade fagomraade) {
 		String enhetsnavnFraDvh = hentNavnFraDvh(arkivsak);
 		if (isBlank(enhetsnavnFraDvh)) {
+			log.info("Fant ikke historisk navn for administrativ enhet i datavarehus for arkivsak med saksIder={}. Prøver å hente fra administrativenhet-tabellen i joark.", arkivsak.saksIder());
 			return administrativEnhetJdbcRepository.hentNavnForAdministrativEnhet(fagomraade.getKode(), arkivsak.finnOpprettetTidspunktForEldsteSak());
 		}
 		return enhetsnavnFraDvh;
