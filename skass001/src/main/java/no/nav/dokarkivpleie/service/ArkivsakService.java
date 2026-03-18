@@ -11,7 +11,8 @@ import no.nav.dokarkivpleie.domain.Saksstatus;
 import no.nav.dokarkivpleie.repository.AdministrativEnhetJdbcRepository;
 import no.nav.dokarkivpleie.repository.JournalpostJdbcRepository;
 import no.nav.dokarkivpleie.repository.SakRepository;
-import no.nav.dokarkivpleie.repository.SlettebestillingJdbcRepository;
+import no.nav.dokarkivpleie.repository.SlettebestillingRepository;
+import no.nav.dokarkivpleie.slack.SlackService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import static no.nav.dokarkivpleie.MerkSakerBevaringstidPassertService.MERK_SAKE
 import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.BEVARINGSTID_PASSERT;
 import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT;
 import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.KLAR_FOR_KASSASJON;
+import static no.nav.dokarkivpleie.domain.Slettebestilling.lagSlettebestilling;
 import static no.nav.dokarkivpleie.service.ArkivsakMapper.mapSakerTilArkivsaker;
 import static org.apache.logging.log4j.util.Strings.isBlank;
 import static org.springframework.transaction.annotation.Propagation.REQUIRES_NEW;
@@ -32,49 +34,60 @@ import static org.springframework.transaction.annotation.Propagation.REQUIRES_NE
 @Slf4j
 @Service
 public class ArkivsakService {
+
 	private final SakRepository sakRepository;
 	private final JournalpostJdbcRepository journalpostJdbcRepository;
 	private final AdministrativEnhetService administrativEnhetService;
 	private final AdministrativEnhetJdbcRepository administrativEnhetJdbcRepository;
-	private final SlettebestillingJdbcRepository slettebestillingJdbcRepository;
+	private final SlettebestillingRepository slettebestillingRepository;
+	private final SlackService slackService;
 
 	ArkivsakService(SakRepository sakRepository,
 					JournalpostJdbcRepository journalpostJdbcRepository,
 					AdministrativEnhetService administrativEnhetService,
 					AdministrativEnhetJdbcRepository administrativEnhetJdbcRepository,
-					SlettebestillingJdbcRepository slettebestillingJdbcRepository) {
+					SlettebestillingRepository slettebestillingRepository,
+					SlackService slackService) {
 		this.sakRepository = sakRepository;
 		this.journalpostJdbcRepository = journalpostJdbcRepository;
 		this.administrativEnhetService = administrativEnhetService;
 		this.administrativEnhetJdbcRepository = administrativEnhetJdbcRepository;
-		this.slettebestillingJdbcRepository = slettebestillingJdbcRepository;
+		this.slettebestillingRepository = slettebestillingRepository;
+		this.slackService = slackService;
 	}
 
 	@Transactional(propagation = REQUIRES_NEW)
-	public void kasserSakerForDoedePersoner(List<String> doedePersonerPartisjon, String tema, Fagomraade fagomraade) {
-		Set<Sak> sakerForDoedePersoner = sakRepository.finnUkasserteSakerForBrukere(doedePersonerPartisjon, tema);
+	public void kasserSakerForDoedePersoner(List<String> doedePersonerPartisjon, Fagomraade fagomraade) {
+		Set<Sak> sakerForDoedePersoner = sakRepository.finnUkasserteSakerForBrukere(doedePersonerPartisjon, fagomraade.getKode());
 
 		List<Arkivsak> arkivsaker = mapSakerTilArkivsaker(sakerForDoedePersoner);
 
 		for (Arkivsak arkivsak : arkivsaker) {
-			//3.1
-			if (arkivsak.harKunAapneSaker()) {
-				hentJournalposterForArkivsak(arkivsak);
+			List<Long> saksIderTilArkivsak = arkivsak.saksIder();
 
-				if (arkivsak.harUferdigeJournalposter()) {
-					// Her blir også dei statusane som ikkje er uferdige tatt med i logginga
-					log.info("Kan ikke avslutte arkivsak med saksIder={} siden journalpoststatuser={} inneholder midlertidige statuser. Avbryter behandling av arkivsak.", arkivsak.saksIder(), arkivsak.journalpoststatuser());
-					return;
+			if (arkivsak.harBaadeAapneOgLukkedeSaker()) {
+				log.error("Arkivsak inneholder saker med både åpne og lukkede saksstatuser med saksIder={}. Avbryter behandling av arkivsak.", saksIderTilArkivsak);
+				slackService.sendMelding("Ugyldig arkivsak!", "Arkivsak inneholder saker med både åpne og lukkede saksstatuser med saksIder=%s.".formatted(saksIderTilArkivsak));
+				continue;
+			}
+
+			if (arkivsak.harKunAapneSaker()) {
+				populerArkivsakMedJournalposter(arkivsak);
+
+				if (arkivsak.harJournalposterIMidlertidigeStatuser()) {
+					log.info("Kan ikke avslutte arkivsak med saksIder={} siden journalpoststatuser={} inneholder midlertidige statuser. Avbryter behandling av arkivsak.", saksIderTilArkivsak, arkivsak.journalpoststatuser());
+					continue;
 				}
 
 				if (arkivsak.harIngenFerdigstilteJournalposter()) {
-					log.info("Arkivsak har ingen ferdigstilte journalposter. Avbryter saker={} knyttet til tom arkivsak.", arkivsak.saksIder());
+					log.info("Arkivsak har ingen ferdigstilte journalposter. Avbryter saker={} knyttet til tom arkivsak.", saksIderTilArkivsak);
 					avbrytArkivsak(arkivsak);
+					continue;
 				} else {
 					String administrativEnhetNavn = finnAdministrativEnhet(arkivsak, fagomraade);
 					if (administrativEnhetNavn == null) {
-						log.warn("Kan ikke avslutte arkivsak med saksIder={} uten administrativ enhet. Avbryter behandling av arkivsak.", arkivsak.saksIder());
-						return;
+						log.warn("Fant ikke administrativ enhet for arkivsak med saksIder={}. Avbryter behandling av arkivsak.", saksIderTilArkivsak);
+						continue;
 					}
 					avsluttArkivsak(arkivsak, administrativEnhetNavn);
 				}
@@ -83,19 +96,23 @@ public class ArkivsakService {
 			if (fagomraade.getAvleverMedDok()) {
 				oppdaterKassasjonsstatus(arkivsak, BEVARINGSTID_PASSERT);
 			} else {
-				slettebestillingJdbcRepository.lagSlettebestillingForArkivsak(arkivsak.saksIder(), fagomraade.getBevaringstid());
+				lagreSlettebestillingerForArkivsak(saksIderTilArkivsak, fagomraade.getBevaringstid());
 				oppdaterKassasjonsstatus(arkivsak, BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT);
 			}
 
-			log.info("Har fullført en loop av merkSakerBevaringstidPassert for arkivsak");
+			log.info("Behandling av arkivsaker for opptil 200 personer er ferdig");
 		}
 	}
 
+	private void populerArkivsakMedJournalposter(Arkivsak arkivsak) {
+		var journalposter = journalpostJdbcRepository.hentJournalposterForSaker(arkivsak.saksIder());
+		arkivsak.journalposter().addAll(journalposter);
+	}
 
 	private String finnAdministrativEnhet(Arkivsak arkivsak, Fagomraade fagomraade) {
 		String enhetsnavnFraDvh = hentNavnFraDvh(arkivsak);
 		if (isBlank(enhetsnavnFraDvh)) {
-			// TODO: Kva skjer viss opprettetTidspunktForEldsteSak er null? Sjekk i db
+			log.info("Fant ikke historisk navn for administrativ enhet i datavarehus for arkivsak med saksIder={}. Prøver å hente fra administrativenhet-tabellen i joark.", arkivsak.saksIder());
 			return administrativEnhetJdbcRepository.hentNavnForAdministrativEnhet(fagomraade.getKode(), arkivsak.finnOpprettetTidspunktForEldsteSak());
 		}
 		return enhetsnavnFraDvh;
@@ -110,11 +127,6 @@ public class ArkivsakService {
 			}
 		}
 		return null;
-	}
-
-	private void hentJournalposterForArkivsak(Arkivsak arkivsak) {
-		var journalposter = journalpostJdbcRepository.hentJournalposterForSaker(arkivsak.saksIder());
-		arkivsak.journalposter().addAll(journalposter);
 	}
 
 	private void avbrytArkivsak(Arkivsak arkivsak) {
@@ -150,5 +162,11 @@ public class ArkivsakService {
 			sak.setEndretKildeNavn(DOKARKIVPLEIE);
 			sak.setDatoEndret(LocalDateTime.now());
 		});
+	}
+
+	private void lagreSlettebestillingerForArkivsak(List<Long> saksIder, String begrunnelse) {
+		saksIder.forEach(saksId ->
+				slettebestillingRepository.persist(lagSlettebestilling(saksId, begrunnelse))
+		);
 	}
 }

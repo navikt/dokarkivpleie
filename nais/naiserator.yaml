@@ -15,6 +15,7 @@ spec:
       value: "{{DOKARKIVPLEIE_ENDPOINTS_PDL_SCOPE}}"
   envFrom:
     - secret: dokarkivpleie
+    - secret: slack-alerts
   image: {{image}}
   port: 8080
   replicas:

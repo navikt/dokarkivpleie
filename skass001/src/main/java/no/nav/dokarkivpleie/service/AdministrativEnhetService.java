@@ -45,7 +45,6 @@ public class AdministrativEnhetService {
 				eldsteFerdigstilteJournalpost.journalfoerendeEnhet(), eldsteFerdigstilteJournalpost.journaldato(), arkivsak.applikasjon());
 
 		if (administrativEnhetOptional.isEmpty()) {
-			log.info("Fant ikke historisk navn for administrativ enhet for arkivsak med saksIder={}", arkivsak.saksIder());
 			return null;
 		}
 		return administrativEnhetOptional.get();
@@ -80,11 +79,11 @@ public class AdministrativEnhetService {
 			return hentKontornavn(gyldigeKontorer, KONTORTYPE_NORG);
 		}
 
-		if (!harDataForKontor(gyldigeKontorer, KONTORTYPE_NORG) && harDataForKontor(gyldigeKontorer, KONTORTYPE_INFOTRYGD)) {
+		if (harDataForKontor(gyldigeKontorer, KONTORTYPE_INFOTRYGD)) {
 			return hentKontornavn(gyldigeKontorer, KONTORTYPE_INFOTRYGD);
 		}
 
-		if (!harDataForKontor(gyldigeKontorer, KONTORTYPE_NORG) && harDataForKontor(gyldigeKontorer, KONTORTYPE_ARENA)) {
+		if (harDataForKontor(gyldigeKontorer, KONTORTYPE_ARENA)) {
 			return hentKontornavn(gyldigeKontorer, KONTORTYPE_ARENA);
 		}
 
@@ -103,16 +102,16 @@ public class AdministrativEnhetService {
 		return journalfoertDato.isEqual(gyldigFraDato) || journalfoertDato.isAfter(gyldigFraDato);
 	}
 
+	private boolean harDataForKontor(List<AdministrativEnhet> gyldigeKontorer, String fagsystem) {
+		return gyldigeKontorer.stream()
+				.anyMatch(ae -> ae.kontortype().equals(fagsystem));
+	}
+
 	private Optional<String> hentKontornavn(List<AdministrativEnhet> gyldigeKontorer, String fagsystem) {
 		return gyldigeKontorer.stream()
 				.filter(ae -> fagsystem.equals(ae.kontortype()))
 				.map(AdministrativEnhet::kontornavn)
 				.findFirst();
-	}
-
-	private boolean harDataForKontor(List<AdministrativEnhet> gyldigeKontorer, String fagsystem) {
-		return gyldigeKontorer.stream()
-				.anyMatch(ae -> ae.kontortype().equals(fagsystem));
 	}
 
 }
