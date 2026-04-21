@@ -99,9 +99,8 @@ public class ArkivsakService {
 				lagreSlettebestillingerForArkivsak(saksIderTilArkivsak, fagomraade.getBevaringstid());
 				oppdaterKassasjonsstatus(arkivsak, BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT);
 			}
-
-			log.info("Behandling av arkivsaker for opptil 200 personer er ferdig");
 		}
+		log.info("Behandling av arkivsaker for opptil 200 personer er ferdig");
 	}
 
 	private void populerArkivsakMedJournalposter(Arkivsak arkivsak) {
