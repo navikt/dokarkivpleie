@@ -100,7 +100,7 @@ public class ArkivsakService {
 				oppdaterKassasjonsstatus(arkivsak, BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT);
 			}
 		}
-		log.info("Behandling av arkivsaker for opptil 200 personer er ferdig");
+		log.info("Behandling av arkivsaker for {} personer er ferdig", doedePersonerPartisjon.size());
 	}
 
 	private void populerArkivsakMedJournalposter(Arkivsak arkivsak) {
