@@ -28,8 +28,10 @@ public class MerkSakerBevaringstidPassertScheduler {
 	}
 
 	//@Scheduled(cron = "0 0 7 * * MON-FRI")
+	@Scheduled(initialDelay = 60000L)
 	public void kjoerPeriodiskJobb() {
 		log.info("Starter Skass001 for å markere saker der bevaringstid har passert for tema={}.", TEMA_MED_STOETTEDE_BEVARINGSTIDER);
+		slackService.sendMelding("Dette er en test!", "ingen ting er feil, dette er en test :)");
 
 		try {
 			administrativEnhetService.hentAdministrativeEnheterFraDatavarehus();

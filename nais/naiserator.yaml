@@ -43,6 +43,7 @@ spec:
       destinations:
         - id: elastic
         - id: loki
+  webproxy: true
   azure:
     application:
       enabled: true

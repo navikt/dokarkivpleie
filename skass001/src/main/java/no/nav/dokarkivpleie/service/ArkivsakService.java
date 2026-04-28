@@ -148,7 +148,7 @@ public class ArkivsakService {
 			sak.setDatoAvsluttet(LocalDateTime.now());
 			sak.setAvsluttetAv(MERK_SAKER_BEVARINGSTID_PASSERT);
 			sak.setAvsluttetKildeNavn(DOKARKIVPLEIE);
-			sak.setDatoSakOpprettet(arkivsak.finnEldsteFerdigstilteJournalpostMedJournalfoerendeEnhetUlikMaskinell().get().opprettetdato());
+			sak.setDatoSakOpprettet(arkivsak.finnOpprettetDatoForEldsteJournalpost());
 			sak.setAdministrativEnhet(administrativEnhet);
 			sak.setSaksansvarlig(administrativEnhet);
 		});
