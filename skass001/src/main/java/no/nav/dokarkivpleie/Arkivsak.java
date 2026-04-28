@@ -4,6 +4,7 @@ import no.nav.dokarkivpleie.domain.Journalpost;
 import no.nav.dokarkivpleie.domain.Sak;
 import no.nav.dokarkivpleie.domain.Saksstatus;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -80,6 +81,12 @@ public record Arkivsak(
 
 		return filtrerteJournalposter.stream()
 				.min(Comparator.comparing(Journalpost::journaldato));
+	}
+
+	public LocalDateTime finnOpprettetDatoForEldsteJournalpost() {
+		return journalposter.stream()
+				.map(Journalpost::journaldato)
+				.min(naturalOrder()).get().atStartOfDay();
 	}
 
 	public LocalDateTime finnOpprettetTidspunktForEldsteSak() {
