@@ -79,6 +79,7 @@ public class ArkivsakService {
 					continue;
 				}
 
+				// Dette kan skje dersom alle journalpostene var feilregistrerte eller hadde journalstatus A, U eller UB. Ev. en blanding av begge tilfeller.
 				if (arkivsak.harIngenFerdigstilteJournalposter()) {
 					log.info("Arkivsak har ingen ferdigstilte journalposter. Avbryter saker={} knyttet til tom arkivsak.", saksIderTilArkivsak);
 					avbrytArkivsak(arkivsak);

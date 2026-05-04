@@ -48,4 +48,12 @@ public class JournalpostJdbcRepositoryTest {
 		assertThat(journalposter).isEmpty();
 	}
 
+	// Journalposter med journalstatus A (avbrutt), U (utgår) og UB (ukjent bruker) skal ikke bli hentet, da de ikke er relevante for arkivsaken
+	@Test
+	public void skalIkkeHenteJournalposterForSakerMedFeilJournalstatus() {
+		List<Journalpost> journalposter = journalpostJdbcRepository.hentJournalposterForSaker(List.of(777L));
+
+		assertThat(journalposter).hasSize(1);
+	}
+
 }

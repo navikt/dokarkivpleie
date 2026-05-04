@@ -12,6 +12,7 @@ public class SqlQueries {
 				join joark.t_journalpost jp on jp.journalpost_id = sr.journalpost_id
 			where sr.sak_id in (:sakIds)
 			and (sr.feilregistrert is null or sr.feilregistrert = '0')
+			and jp.k_journal_s not in ('A', 'U', 'UB')
 			""";
 
 	public static final String HENT_NAVN_FOR_ADMINISTRATIV_ENHET = """
