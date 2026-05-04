@@ -37,6 +37,18 @@ insert into joark.t_saksrelasjon(sak_id, feilregistrert, journalpost_id)
 VALUES (678, '0', 67891011);
 
 insert into joark.t_saksrelasjon(sak_id, feilregistrert, journalpost_id)
+VALUES (777, '0', 7771);
+
+insert into joark.t_saksrelasjon(sak_id, feilregistrert, journalpost_id)
+VALUES (777, '0', 7772);
+
+insert into joark.t_saksrelasjon(sak_id, feilregistrert, journalpost_id)
+VALUES (777, '0', 7773);
+
+insert into joark.t_saksrelasjon(sak_id, feilregistrert, journalpost_id)
+VALUES (777, '0', 7774);
+
+insert into joark.t_saksrelasjon(sak_id, feilregistrert, journalpost_id)
 VALUES (7898, '0', 123456);
 
 insert into joark.t_saksrelasjon(sak_id, feilregistrert, journalpost_id)
@@ -78,6 +90,18 @@ VALUES ('5678910', 'FS', '', '2025-02-13T14:45', '2025-02-13T15:00');
 insert into joark.t_journalpost(journalpost_id, k_journal_s, journalf_enhet, dato_opprettet, dato_journal)
 VALUES ('67891011', 'FL', '1111', '2025-01-01T13:30', '2025-01-02T13:30');
 
+insert into joark.t_journalpost(journalpost_id, k_journal_s, journalf_enhet, dato_opprettet, dato_journal)
+VALUES ('7771', 'A', '1111', '2025-01-01T13:30', '2025-01-02T13:30');
+
+insert into joark.t_journalpost(journalpost_id, k_journal_s, journalf_enhet, dato_opprettet, dato_journal)
+VALUES ('7772', 'U', '1111', '2025-01-01T13:30', '2025-01-02T13:30');
+
+insert into joark.t_journalpost(journalpost_id, k_journal_s, journalf_enhet, dato_opprettet, dato_journal)
+VALUES ('7773', 'UB', '1111', '2025-01-01T13:30', '2025-01-02T13:30');
+
+insert into joark.t_journalpost(journalpost_id, k_journal_s, journalf_enhet, dato_opprettet, dato_journal)
+VALUES ('7774', 'FS', '1111', '2025-01-01T13:30', '2025-01-02T13:30');
+
 create table joark.sak
 (
     ID                   NUMBER(10, 0) not null,
@@ -113,6 +137,9 @@ VALUES (568);
 
 insert into joark.sak(ID)
 VALUES (678);
+
+insert into joark.sak(ID)
+VALUES (777);
 
 insert into joark.sak(ID, FAGSAKNR)
 VALUES (7898, 'FAGSAK_123');

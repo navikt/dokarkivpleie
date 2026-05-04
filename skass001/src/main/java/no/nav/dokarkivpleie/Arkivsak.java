@@ -4,7 +4,6 @@ import no.nav.dokarkivpleie.domain.Journalpost;
 import no.nav.dokarkivpleie.domain.Sak;
 import no.nav.dokarkivpleie.domain.Saksstatus;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
