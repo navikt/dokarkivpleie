@@ -27,7 +27,7 @@ public class MerkSakerBevaringstidPassertScheduler {
 		this.slackService = slackService;
 	}
 
-	@Scheduled(cron = "0 40 11 * * MON-FRI")
+	@Scheduled(cron = "0 0 7 * * MON-FRI")
 	public void kjoerPeriodiskJobb() {
 		log.info("Starter Skass001 for å markere saker der bevaringstid har passert for tema={}.", TEMA_MED_STOETTEDE_BEVARINGSTIDER);
 
