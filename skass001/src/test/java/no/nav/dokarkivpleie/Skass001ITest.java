@@ -3,6 +3,7 @@ package no.nav.dokarkivpleie;
 import jakarta.persistence.EntityManager;
 import no.nav.dokarkivpleie.config.CoreConfig;
 import no.nav.dokarkivpleie.config.RepositoryConfig;
+import no.nav.dokarkivpleie.consumers.dvh.DatavarehusConsumer;
 import no.nav.dokarkivpleie.domain.Avleveringsstatus;
 import no.nav.dokarkivpleie.domain.Fagomraade;
 import no.nav.dokarkivpleie.domain.Sak;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
 import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
@@ -33,6 +35,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.verify;
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static no.nav.dokarkivpleie.MerkSakerBevaringstidPassertService.DOKARKIVPLEIE;
 import static no.nav.dokarkivpleie.MerkSakerBevaringstidPassertService.MERK_SAKER_BEVARINGSTID_PASSERT;
+import static no.nav.dokarkivpleie.consumers.dvh.DatavarehusConsumer.DVH_QUERY;
+import static no.nav.dokarkivpleie.consumers.dvh.DatavarehusConsumer.MAX_ANTALL_ENHETER_SOM_SKAL_HENTES;
 import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.BEVARINGSTID_PASSERT_DOK_KASSASJON_BESTILT;
 import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.KLAR_FOR_KASSASJON;
 import static no.nav.dokarkivpleie.domain.Saksstatus.AAPEN;
@@ -213,6 +217,18 @@ public class Skass001ITest {
 		assertThat(hentSlettebestillinger()).hasSize(1)
 				.extracting("sakId", "slettebestillingStatus", "slettebestillingType", "slettebestillingHjemmel", "slettebestillingArsak")
 				.containsExactly(tuple(123L, OPPRETTET, DOKUMENTER_PA_SAK, ARK, BEVARINGSTID));
+	}
+
+	@Test
+	void skalBrukeLimitMotDvh() {
+		stubDvh("response.json");
+
+		merkSakerBevaringstidPassertScheduler.kjoerPeriodiskJobb();
+
+		verify(1, getRequestedFor(urlPathEqualTo("/dvh"))
+				.withQueryParam("q", equalTo(DVH_QUERY))
+				.withQueryParam("limit", equalTo(String.valueOf(MAX_ANTALL_ENHETER_SOM_SKAL_HENTES)))
+		);
 	}
 
 	@Test
