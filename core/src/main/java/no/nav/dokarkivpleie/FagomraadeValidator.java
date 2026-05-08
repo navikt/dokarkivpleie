@@ -10,7 +10,7 @@ public class FagomraadeValidator {
 
 	public static final String BEVARINGSTID_10_AAR_ETTER_BRUKERS_DOED = "10_AAR_ETTER_BRUKERS_DOED";
 	public static final String BEVARINGSTID_25_AAR_ETTER_BRUKERS_DOED = "25_AAR_ETTER_BRUKERS_DOED";
-	public static final List<String> STOETTEDE_BEVARINGSTIDER = List.of(BEVARINGSTID_10_AAR_ETTER_BRUKERS_DOED, BEVARINGSTID_25_AAR_ETTER_BRUKERS_DOED);
+	private static final List<String> STOETTEDE_BEVARINGSTIDER = List.of(BEVARINGSTID_10_AAR_ETTER_BRUKERS_DOED, BEVARINGSTID_25_AAR_ETTER_BRUKERS_DOED);
 
 	public static boolean erFagomraadeUgyldig(Fagomraade fagomraade) {
 		if (fagomraade == null) {

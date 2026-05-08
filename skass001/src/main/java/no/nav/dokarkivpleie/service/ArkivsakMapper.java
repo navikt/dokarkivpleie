@@ -20,7 +20,7 @@ public class ArkivsakMapper {
 		return arkivsaker;
 	}
 
-	public static List<Arkivsak> mapSakerMedFagsaknrTilArkivsaker(List<Sak> saker) {
+	private static List<Arkivsak> mapSakerMedFagsaknrTilArkivsaker(List<Sak> saker) {
 		return saker.stream()
 				.filter(sak -> sak.getFagsakNr() != null)
 				.collect(Collectors.groupingBy(sak -> List.of(
@@ -39,7 +39,7 @@ public class ArkivsakMapper {
 				.toList();
 	}
 
-	public static List<Arkivsak> mapSakerUtenFagsaknrTilArkivsaker(List<Sak> saker) {
+	private static List<Arkivsak> mapSakerUtenFagsaknrTilArkivsaker(List<Sak> saker) {
 		return saker.stream()
 				.filter(sak -> sak.getFagsakNr() == null)
 				.collect(Collectors.groupingBy(sak -> List.of(

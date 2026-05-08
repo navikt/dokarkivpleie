@@ -22,7 +22,7 @@ public class Karp001Service {
 		this.pdlConsumer = pdlConsumer;
 	}
 
-	public void behandleDoedsfallhendelseFraLeesah(Doedsfallhendelse doedsfall) {		;
+	public void behandleDoedsfallhendelseFraLeesah(Doedsfallhendelse doedsfall) {
 		log.info("Doedsfall-hendelse med endringstype={} og hendelseId={} mottatt.", doedsfall.endringstype(), doedsfall.hendelseId());
 		validerDoedsfall(doedsfall);
 
