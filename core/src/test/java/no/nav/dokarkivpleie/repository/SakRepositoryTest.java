@@ -17,7 +17,6 @@ import java.util.Set;
 
 import static java.time.temporal.ChronoUnit.SECONDS;
 import static no.nav.dokarkivpleie.domain.Kassasjonsstatus.KASSERT;
-import static no.nav.dokarkivpleie.domain.Saksstatus.AVSLUTTET;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
@@ -36,7 +35,6 @@ class SakRepositoryTest {
 	private static final LocalDate DOEDSDATO_UNDER_10_AAR = LocalDate.now().minusMonths(119);
 	private static final String TEMA_AAP = "AAP";
 	private static final String TEMA_BIL = "BIL";
-	private static final String ENDRET_AV_SKASS001 = "MerkSakerBevaringstidPassert";
 	private static final String ENDRET_AV_KARP001 = "OppdaterSakerMedDoedsdatoOgFnr";
 	private static final String ENDRET_KILDE_NAVN_DOKARKIVPLEIE = "dokarkivpleie";
 
@@ -54,43 +52,6 @@ class SakRepositoryTest {
 				.createQuery("delete from Sak")
 				.executeUpdate();
 		commitAndBeginNewTransaction();
-	}
-
-	@Test
-	void skalFinneAktoeriderSomSkalFaaOppdatertFoedselsnummerOgDoedsdato() {
-		var sak = createBaseSak().aktoerId(AKTOER_ID1).build();
-		var sakMedSammeAktoerId = createBaseSak().aktoerId(AKTOER_ID1).build();
-		var sakMedFeilTema = createBaseSak().tema(TEMA_BIL).aktoerId(AKTOER_ID3).build();
-		var sakUtenAktoerId = createBaseSak().build();
-		var sakMedKassasjonsstatus = createBaseSak().aktoerId(AKTOER_ID3).kassasjonsstatus(KASSERT).saksstatus(AVSLUTTET).build();
-		var sakMedDoedsdato = createBaseSak().aktoerId(AKTOER_ID3).doedsdato(LocalDate.now().minusWeeks(1)).build();
-		var sakMedAnnenAktoerId = createBaseSak().aktoerId(AKTOER_ID2).build();
-		sakRepository.persistAll(List.of(sak, sakMedSammeAktoerId, sakMedFeilTema, sakUtenAktoerId, sakMedKassasjonsstatus, sakMedDoedsdato, sakMedAnnenAktoerId));
-
-		Set<String> saker = sakRepository.finnAktoeriderDerFoedselsnummerOgDoedsdatoSkalBliOppdatert(TEMA_AAP);
-
-		assertThat(saker)
-				.isNotNull()
-				.hasSize(2)
-				.contains(AKTOER_ID1, AKTOER_ID2);
-	}
-
-	@Test
-	void skalOppdatereFoedselsnummerOgDoedsdato() {
-		var relevantSak = createBaseSak().aktoerId(AKTOER_ID1).build();
-		var sakMedAnnetTema = createBaseSak().tema(TEMA_BIL).aktoerId(AKTOER_ID1).build();
-		var sakUtenAktoerId = createBaseSak().build();
-		var sakMedFeilSaksstatus = createBaseSak().aktoerId(AKTOER_ID1).saksstatus(AVSLUTTET).build();
-		sakRepository.persistAll(List.of(relevantSak, sakMedAnnetTema, sakUtenAktoerId, sakMedFeilSaksstatus));
-
-		sakRepository.oppdaterFoedselsnummerOgDoedsdato(AKTOER_ID1, BRUKERID_FNR, DOEDSDATO);
-		commitAndBeginNewTransaction();
-
-		List<Sak> sakerSomSkalVaereOppdaterte = sakRepository.findAllById(List.of(relevantSak.getSakId(), sakMedAnnetTema.getSakId()));
-		List<Sak> sakerSomIkkeSkalVaereOppdaterte = sakRepository.findAllById(List.of(sakUtenAktoerId.getSakId(), sakMedFeilSaksstatus.getSakId()));
-
-		assertThat(sakerSomSkalVaereOppdaterte).allSatisfy(sak -> assertSakErOppdatert(sak, ENDRET_AV_SKASS001));
-		assertThat(sakerSomIkkeSkalVaereOppdaterte).allSatisfy(this::assertSakIkkeErOppdatert);
 	}
 
 	@Test

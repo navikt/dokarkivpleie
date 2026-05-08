@@ -2,7 +2,6 @@ package no.nav.dokarkivpleie.consumers.pdl;
 
 import lombok.extern.slf4j.Slf4j;
 import no.nav.dokarkivpleie.config.DokarkivpleieProperties;
-import no.nav.dokarkivpleie.consumers.pdl.HentPersonBolkResponse.HentPersonBolk;
 import no.nav.dokarkivpleie.consumers.pdl.PdlHentIdenterResponse.PdlIdenter;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.resilience.annotation.Retryable;
@@ -10,7 +9,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.UUID;
 
 import static java.lang.String.format;
@@ -78,54 +76,6 @@ public class PdlConsumer {
 						      gruppe
 						      historisk
 						    }
-						  }
-						}
-						""")
-				.variables(variables)
-				.build();
-	}
-
-	@Retryable(value = PdlTechnicalException.class)
-	public List<HentPersonBolk> hentNyesteFnrOgDoedsdato(List<String> aktoerIder) {
-		HentPersonBolkResponse pdlResponse = restClientTexas.post()
-				.attribute(ENTRA_TARGET_SCOPE, scopePdl)
-				.body(mapHentPersonBolk(aktoerIder))
-				.retrieve()
-				.onStatus(HttpStatusCode::isError, (_, res) -> {
-					if (res.getStatusCode().is4xxClientError()) {
-						throw new PdlFunctionalException(format("Klarte ikke hente aktoerIder fra PDL med statuskode=%s og feilmelding=%s", res.getStatusCode(), res.getStatusText()));
-					}
-					throw new PdlTechnicalException(format("Klarte ikke hente aktoerIder fra PDL med statuskode=%s og feilmelding=%s", res.getStatusCode(), res.getStatusText()));
-				})
-				.body(HentPersonBolkResponse.class);
-
-		if (pdlResponse.errors() == null || pdlResponse.errors().isEmpty()) {
-			return pdlResponse.data().hentPersonBolk();
-		} else {
-			throw new PdlFunctionalException("Kunne ikke hente aktørider for folkeregisterident i PDL. " + pdlResponse.errors());
-		}
-	}
-
-	private PdlRequest mapHentPersonBolk(List<String> aktoerIder) {
-		HashMap<String, Object> variables = new HashMap<>();
-		variables.put("identer", aktoerIder);
-
-		return PdlRequest.builder()
-				.query("""
-						query hentPersonBolk($identer: [ID!]!) {
-						  hentPersonBolk(identer: $identer) {
-						    ident
-						    person {
-						      doedsfall {
-						        doedsdato
-						      }
-						      folkeregisteridentifikator {
-						        identifikasjonsnummer
-						        status
-						        type
-						      }
-						    }
-						    code
 						  }
 						}
 						""")

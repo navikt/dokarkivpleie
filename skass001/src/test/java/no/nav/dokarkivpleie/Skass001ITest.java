@@ -3,7 +3,6 @@ package no.nav.dokarkivpleie;
 import jakarta.persistence.EntityManager;
 import no.nav.dokarkivpleie.config.CoreConfig;
 import no.nav.dokarkivpleie.config.RepositoryConfig;
-import no.nav.dokarkivpleie.consumers.dvh.DatavarehusConsumer;
 import no.nav.dokarkivpleie.domain.Avleveringsstatus;
 import no.nav.dokarkivpleie.domain.Fagomraade;
 import no.nav.dokarkivpleie.domain.Sak;

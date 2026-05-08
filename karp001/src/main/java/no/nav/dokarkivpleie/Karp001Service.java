@@ -6,8 +6,6 @@ import no.nav.dokarkivpleie.consumers.pdl.PdlHentIdenterResponse.PdlIdenter;
 import no.nav.dokarkivpleie.repository.SakRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 import static no.nav.dokarkivpleie.DoedsfallhendelseValidator.validerDoedsfall;
 
 @Slf4j
