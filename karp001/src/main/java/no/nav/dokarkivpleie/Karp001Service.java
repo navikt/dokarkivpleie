@@ -6,8 +6,6 @@ import no.nav.dokarkivpleie.consumers.pdl.PdlHentIdenterResponse.PdlIdenter;
 import no.nav.dokarkivpleie.repository.SakRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-
 import static no.nav.dokarkivpleie.DoedsfallhendelseValidator.validerDoedsfall;
 
 @Slf4j
@@ -24,7 +22,7 @@ public class Karp001Service {
 		this.pdlConsumer = pdlConsumer;
 	}
 
-	public void behandleDoedsfallhendelseFraLeesah(Doedsfallhendelse doedsfall) {		;
+	public void behandleDoedsfallhendelseFraLeesah(Doedsfallhendelse doedsfall) {
 		log.info("Doedsfall-hendelse med endringstype={} og hendelseId={} mottatt.", doedsfall.endringstype(), doedsfall.hendelseId());
 		validerDoedsfall(doedsfall);
 

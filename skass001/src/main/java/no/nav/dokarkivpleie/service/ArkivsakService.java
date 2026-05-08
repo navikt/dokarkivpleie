@@ -118,7 +118,7 @@ public class ArkivsakService {
 		return enhetsnavnFraDvh;
 	}
 
-	public String hentNavnFraDvh(Arkivsak arkivsak) {
+	private String hentNavnFraDvh(Arkivsak arkivsak) {
 		Optional<Journalpost> eldsteFerdigstilteJournalpostOptional = arkivsak.finnEldsteFerdigstilteJournalpostMedJournalfoerendeEnhetUlikMaskinell();
 		if (eldsteFerdigstilteJournalpostOptional.isPresent()) {
 			String navnFraDvh = administrativEnhetService.hentHistoriskNavnForAdministrativEnhet(eldsteFerdigstilteJournalpostOptional.get(), arkivsak);
