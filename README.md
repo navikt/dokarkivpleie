@@ -7,6 +7,9 @@ Appen ligger per desember 2025 i FSS (fagsystemsonen), men skal bli flyttet til 
 ### Periodiske jobber:
 - skass001 - [MerkSakerBevaringstidPassert](https://confluence.adeo.no/spaces/BOA/pages/494765936/SKASS001+-+MerkSakerBevaringstidPassert)
 
+### Kafka-tjenester:
+- karp001 - [BehandleDødsfallhendelse](https://confluence.adeo.no/spaces/BOA/pages/780356424/KARP001+-+BehandleDødsfallhendelse)
+
 ## Komme i gang
 Prosjektet bruker Java 25. For å bygge prosjektet lokalt, kjør kommandoen:
 `mvn clean install`
