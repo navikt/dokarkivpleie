@@ -15,16 +15,6 @@ import org.springframework.validation.annotation.Validated;
 public class DokarkivpleieProperties {
 
 	@Valid
-	private final Skass001 skass001 = new Skass001();
-
-	public static class Skass001 {
-		@Getter
-		@Setter
-		@NotEmpty
-		private String cronschedule;
-	}
-
-	@Valid
 	private final Endpoints endpoints = new Endpoints();
 
 	@Getter
