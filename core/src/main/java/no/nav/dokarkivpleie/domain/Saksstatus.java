@@ -1,28 +1,18 @@
 package no.nav.dokarkivpleie.domain;
 
-/**
- * Enum for codes in T_K_SAK_STATUS.
- */
+/// Enum for codes in `T_K_SAK_STATUS`.
 public enum Saksstatus {
 
-	/**
-	 * Saken er opprettet og åpen/aktiv. Nye journalposter kan knyttes til saken.
-	 */
+	/// Saken er opprettet og åpen/aktiv. Nye journalposter kan knyttes til saken.
 	AAPEN,
 
-	/**
-	 * Saken er avsluttet.
-	 */
+	/// Saken er avsluttet.
 	AVSLUTTET,
 
-	/**
-	 * Saken er avlevert.
-	 */
+	/// Saken er avlevert.
 	AVLEVERT,
 
-	/**
-	 * Saken er avbrutt.
-	 */
+	/// Saken er avbrutt.
 	AVBRUTT
 
 }

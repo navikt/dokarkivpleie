@@ -27,12 +27,10 @@ public class NaisTexasConsumer {
 				.build();
 	}
 
-	/**
-	 * Maskin-til-maskin systemtoken fra Texas
-	 *
-	 * @param targetScope Maskin man vil autorisere mot på format api://<cluster>.<namespace>.<other-api-app-name>/.default
-	 * @return Bearer token
-	 */
+	/// Maskin-til-maskin systemtoken fra Texas
+	///
+	/// @param targetScope Maskin man vil autorisere mot på format `api://<cluster>.<namespace>.<other-api-app-name>/.default`
+	/// @return Bearer token
 	public @NonNull String getSystemToken(String targetScope) {
 		if (isBlank(targetScope) || !ENTRA_TARGET_PATTERN.matcher(targetScope).matches()) {
 			throw new IllegalArgumentException("Ugyldig targetScope. Må være på format api://<cluster>.<namespace>.<other-api-app-name>/.default");

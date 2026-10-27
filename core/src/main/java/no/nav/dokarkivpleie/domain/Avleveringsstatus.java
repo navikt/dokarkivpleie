@@ -1,27 +1,17 @@
 package no.nav.dokarkivpleie.domain;
 
-/**
- * Enum for codes in T_K_AVLEVERING_STATUS
- */
+/// Enum for codes in `T_K_AVLEVERING_STATUS`
 public enum Avleveringsstatus {
 
-	/**
-	 * Klar for avlevering
-	 */
+	/// Klar for avlevering
 	KLAR_FOR_AVLEVERING,
 
-	/**
-	 * Overført til arkivverket
-	 */
+	/// Overført til arkivverket
 	AVLEVERING_OVERFOERT,
 
-	/**
-	 * Avlevert og godkjent av arkivverket
-	 */
+	/// Avlevert og godkjent av arkivverket
 	AVLEVERT,
 
-	/**
-	 * Avbrutt og skal ikke avleveres
-	 */
+	/// Avbrutt og skal ikke avleveres
 	AVBRUTT
 }

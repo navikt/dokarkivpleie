@@ -16,9 +16,7 @@ import lombok.Setter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-/**
- * Inneholder metadata om sakstilknytningen til fagsystemet.
- */
+/// Inneholder metadata om sakstilknytningen til fagsystemet.
 @Entity
 @Getter
 @Setter
