@@ -5,11 +5,9 @@ import jakarta.persistence.EntityManager;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Kopiert og modifisiert fra HibernateRepositoryImpl.java i https://github.com/vladmihalcea/hypersistence-utils (hypersistence-utils-hibernate-71)
- *
- * @param <T> JPA entiteten.
- */
+/// Kopiert og modifisiert fra HibernateRepositoryImpl.java i [hypersistence-utils-hibernate-71](https://github.com/vladmihalcea/hypersistence-utils)
+///
+/// @param <T> JPA entiteten.
 public class HibernateRepositoryImpl<T> implements HibernateRepository<T> {
 
 	private final EntityManager entityManager;

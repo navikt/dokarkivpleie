@@ -23,9 +23,7 @@ import static no.nav.dokarkivpleie.domain.SlettebestillingHjemmel.ARK;
 import static no.nav.dokarkivpleie.domain.SlettebestillingStatus.OPPRETTET;
 import static no.nav.dokarkivpleie.domain.SlettebestillingType.DOKUMENTER_PA_SAK;
 
-/**
- * Entitet for slettesbestilling av dokumenter.
- */
+/// Entitet for slettesbestilling av dokumenter.
 @Entity
 @Getter
 @Setter

@@ -36,33 +36,27 @@ Changes done to the file:
 	* updateAllAndFlush
 */
 
-/**
- * Kopiert og modifisiert fra HibernateRepository.java i https://github.com/vladmihalcea/hypersistence-utils (hypersistence-utils-hibernate-71)
- * <p>
- * Metoder for å behandle Hibernate sine entity state changes.
- *
- * @param <T> JPA entiteten.
- */
+/// Kopiert og modifisiert fra HibernateRepository.java i [hypersistence-utils-hibernate-71](https://github.com/vladmihalcea/hypersistence-utils)
+///
+/// Metoder for å behandle Hibernate sine entity state changes.
+///
+/// @param <T> JPA entiteten.
 public interface HibernateRepository<T> {
 
-	/**
-	 * The persist method allows you to pass the provided entity to the {@code persist} method of the
-	 * underlying JPA {@code EntityManager}.
-	 *
-	 * @param entity entity to persist
-	 * @param <S>    entity type
-	 * @return entity
-	 */
+	/// The persist method allows you to pass the provided entity to the `persist` method of the
+	/// underlying JPA `EntityManager`.
+	///
+	/// @param entity entity to persist
+	/// @param <S>    entity type
+	/// @return entity
 	<S extends T> S persist(S entity);
 
-	/**
-	 * The persistAll method allows you to pass the provided entities to the {@code persist} method of the
-	 * underlying JPA {@code EntityManager}.
-	 *
-	 * @param entities entities to persist
-	 * @param <S>    entity type
-	 * @return entities
-	 */
+	/// The persistAll method allows you to pass the provided entities to the `persist` method of the
+	/// underlying JPA `EntityManager`.
+	///
+	/// @param entities entities to persist
+	/// @param <S>    entity type
+	/// @return entities
 	<S extends T> List<S> persistAll(Iterable<S> entities);
 
 }
