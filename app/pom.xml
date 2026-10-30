@@ -29,6 +29,10 @@
 			<groupId>no.nav.dokarkivpleie</groupId>
 			<artifactId>leesah</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>no.nav.dokarkivpleie</groupId>
+			<artifactId>arkiverdokumentfiler</artifactId>
+		</dependency>
 	</dependencies>
 
 	<build>

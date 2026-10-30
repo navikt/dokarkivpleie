@@ -21,6 +21,7 @@
 		<module>skass001</module>
 		<module>karp001</module>
 		<module>leesah</module>
+		<module>arkiverdokumentfiler</module>
 	</modules>
 
 	<repositories>
@@ -38,6 +39,7 @@
 		<guava.version>33.8.0-jre</guava.version>
 		<kafka-avro-serializer.version>8.4.0</kafka-avro-serializer.version>
 		<slack-api-client.version>1.53.0</slack-api-client.version>
+		<google-cloud-libraries-bom.version>26.90.0</google-cloud-libraries-bom.version>
 
 		<wiremock-spring-boot.version>4.4.3</wiremock-spring-boot.version>
 	</properties>
@@ -64,7 +66,18 @@
 				<artifactId>leesah</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-
+			<dependency>
+				<groupId>no.nav.dokarkivpleie</groupId>
+				<artifactId>arkiverdokumentfiler</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.google.cloud</groupId>
+				<artifactId>libraries-bom</artifactId>
+				<version>${google-cloud-libraries-bom.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 			<dependency>
 				<groupId>net.logstash.logback</groupId>
 				<artifactId>logstash-logback-encoder</artifactId>
@@ -85,7 +98,6 @@
 				<artifactId>slack-api-client</artifactId>
 				<version>${slack-api-client.version}</version>
 			</dependency>
-
 			<dependency>
 				<groupId>org.wiremock.integrations</groupId>
 				<artifactId>wiremock-spring-boot</artifactId>
@@ -113,6 +125,7 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
 				<configuration>
+					<enablePreview>true</enablePreview>
 					<annotationProcessorPaths>
 						<path>
 							<groupId>org.projectlombok</groupId>
@@ -120,6 +133,13 @@
 							<version>${lombok.version}</version>
 						</path>
 					</annotationProcessorPaths>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>--enable-preview</argLine>
 				</configuration>
 			</plugin>
 		</plugins>
