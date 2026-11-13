@@ -41,6 +41,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import static no.nav.dokarkivpleie.arkiverdokumentfiler.Digest.crc32c;
 import static no.nav.dokarkivpleie.domain.DokumentFilOpplastingTilstand.ARKIVERES;
 import static no.nav.dokarkivpleie.domain.DokumentFilOpplastingTilstand.ARKIVERT;
 import static no.nav.dokarkivpleie.domain.DokumentFilOpplastingTilstand.FEILET;
@@ -99,6 +100,7 @@ class ArkiverDokumentFilerIT {
 		lagOpplastingMedFil(UUID.randomUUID(), DOKUMENT_FIL_INNHOLD);
 		lagOpplastingMedFil(UUID.randomUUID(), DOKUMENT_FIL_INNHOLD);
 		lagOpplastingMedFil(UUID.randomUUID(), DOKUMENT_FIL_INNHOLD);
+		assertThat(bucketStorage.harTemporaryHold(dokumentFilId1.toString())).isTrue();
 
 		kjoerJobb();
 
@@ -107,6 +109,7 @@ class ArkiverDokumentFilerIT {
 		assertThat(dokumentFilOpplasting.getDatoArkivert()).isCloseTo(LocalDateTime.now(), within(Duration.ofMinutes(5)));
 		DokumentFil dokumentFil1 = hentDokumentFil(dokumentFilId1);
 		assertThat(IOUtils.toByteArray(dokumentFil1.getFil().getBinaryStream())).isEqualTo(DOKUMENT_FIL_INNHOLD);
+		assertThat(bucketStorage.harTemporaryHold(dokumentFilId1.toString())).isFalse();
 	}
 
 
@@ -125,17 +128,6 @@ class ArkiverDokumentFilerIT {
 			assertThat(dokumentFil.getOpprettetAv()).isEqualTo(DokumentFilArkiverer.KILDE);
 			assertThat(hentFilInnhold(dokumentFilId)).isEqualTo(DOKUMENT_FIL_INNHOLD);
 		});
-	}
-
-	@Test
-	void skalFjerneTemporaryHoldEtterArkivering() {
-		UUID dokumentFilId = UUID.randomUUID();
-		lagOpplastingMedFil(dokumentFilId, DOKUMENT_FIL_INNHOLD);
-		assertThat(bucketStorage.harTemporaryHold(dokumentFilId.toString())).isTrue();
-
-		kjoerJobb();
-
-		assertThat(bucketStorage.harTemporaryHold(dokumentFilId.toString())).isFalse();
 	}
 
 	@ParameterizedTest
@@ -178,7 +170,7 @@ class ArkiverDokumentFilerIT {
 	void skalOkeForsokVedFeilVedLesing() {
 		UUID dokumentFilId = UUID.randomUUID();
 		lagOpplastingMedFil(dokumentFilId, DOKUMENT_FIL_INNHOLD);
-		bucketStorage.feilVedLesing(dokumentFilId.toString());
+		bucketStorage.genererLesefeil(dokumentFilId.toString());
 
 		kjoerJobb();
 
@@ -193,7 +185,7 @@ class ArkiverDokumentFilerIT {
 	void skalArkivereVedNesteKjoringEtterTekniskFeil() {
 		UUID dokumentFilId = UUID.randomUUID();
 		lagOpplastingMedFil(dokumentFilId, DOKUMENT_FIL_INNHOLD);
-		bucketStorage.feilVedLesing(dokumentFilId.toString());
+		bucketStorage.genererLesefeil(dokumentFilId.toString());
 
 		kjoerJobb();
 		kjoerJobb();
@@ -223,7 +215,7 @@ class ArkiverDokumentFilerIT {
 		int maksForsok = dokarkivpleieProperties.getArkiverDokumentfiler().getMaksForsok();
 		UUID dokumentFilId = UUID.randomUUID();
 		lagOpplasting(opplastingMedFil(dokumentFilId, DOKUMENT_FIL_INNHOLD).forsok(maksForsok - 1).build());
-		bucketStorage.feilVedLesing(dokumentFilId.toString());
+		bucketStorage.genererLesefeil(dokumentFilId.toString());
 
 		kjoerJobb();
 
@@ -237,7 +229,7 @@ class ArkiverDokumentFilerIT {
 	void skalSetteFeiletVedUlikCrc32c() {
 		UUID dokumentFilId = UUID.randomUUID();
 		lagOpplasting(opplastingMedFil(dokumentFilId, DOKUMENT_FIL_INNHOLD)
-				.crc32cSjekksum(InMemoryBucketStorage.crc32c("annet innhold".getBytes()))
+				.crc32cSjekksum(crc32c("annet innhold".getBytes()))
 				.build());
 
 		kjoerJobb();
@@ -266,7 +258,7 @@ class ArkiverDokumentFilerIT {
 	void skalIkkeRulleTilbakeAndreRaderVedFeil() {
 		UUID feilendeDokumentFilId = UUID.randomUUID();
 		lagOpplastingMedFil(feilendeDokumentFilId, DOKUMENT_FIL_INNHOLD);
-		bucketStorage.feilVedLesing(feilendeDokumentFilId.toString());
+		bucketStorage.genererLesefeil(feilendeDokumentFilId.toString());
 		List<UUID> dokumentFilIder = List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
 		dokumentFilIder.forEach(dokumentFilId -> lagOpplastingMedFil(dokumentFilId, DOKUMENT_FIL_INNHOLD));
 
@@ -283,7 +275,7 @@ class ArkiverDokumentFilerIT {
 	void skalArkivereSelvOmFjerningAvTemporaryHoldFeiler() {
 		UUID dokumentFilId = UUID.randomUUID();
 		lagOpplastingMedFil(dokumentFilId, DOKUMENT_FIL_INNHOLD);
-		bucketStorage.feilVedFjerningAvHold(dokumentFilId.toString());
+		bucketStorage.genererFjernTemporaryHoldFeil(dokumentFilId.toString());
 
 		kjoerJobb();
 
@@ -345,18 +337,15 @@ class ArkiverDokumentFilerIT {
 		assertThat(bucketStorage.harTemporaryHold(dokumentFilId.toString())).isTrue();
 	}
 
-	/// Legger innholdet i bucket og lagrer en opplasting i tilstand `ARKIVERES` som matcher innholdet.
 	DokumentFilOpplasting lagOpplastingMedFil(UUID dokumentFilId, byte[] innhold) {
 		return lagOpplasting(opplastingMedFil(dokumentFilId, innhold).build());
 	}
 
-	/// Legger innholdet i bucket og returnerer en builder for en opplasting som matcher innholdet.
 	DokumentFilOpplasting.DokumentFilOpplastingBuilder opplastingMedFil(UUID dokumentFilId, byte[] innhold) {
 		bucketStorage.leggTil(dokumentFilId.toString(), innhold);
 		return opplasting(dokumentFilId, innhold);
 	}
 
-	/// Builder for en opplasting i tilstand `ARKIVERES` som matcher innholdet, uten å legge noe i bucket.
 	static DokumentFilOpplasting.DokumentFilOpplastingBuilder opplasting(UUID dokumentFilId, byte[] innhold) {
 		return DokumentFilOpplasting.builder()
 				.dokumentFilId(dokumentFilId)
@@ -364,14 +353,13 @@ class ArkiverDokumentFilerIT {
 				.mediaType("application/pdf")
 				.tilstand(ARKIVERES)
 				.sha256Sjekksum(sha256(innhold))
-				.crc32cSjekksum(InMemoryBucketStorage.crc32c(innhold))
+				.crc32cSjekksum(crc32c(innhold))
 				.antallBytes((long) innhold.length)
 				.opprettetKildeNavn("itest")
 				.datoLastetOpp(LocalDateTime.now())
 				.datoKlientLease(LocalDateTime.now());
 	}
 
-	/// Lagrer opplastingen i en egen transaksjon.
 	DokumentFilOpplasting lagOpplasting(DokumentFilOpplasting opplasting) {
 		transactionTemplate.executeWithoutResult(_ -> dokumentFilOpplastingRepository.persist(opplasting));
 		return opplasting;

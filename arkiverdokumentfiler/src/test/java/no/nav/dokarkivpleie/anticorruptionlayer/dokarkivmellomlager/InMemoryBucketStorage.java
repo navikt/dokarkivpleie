@@ -12,9 +12,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.CRC32C;
 
-/// [BucketStorage] i minnet for tester.
+import static no.nav.dokarkivpleie.arkiverdokumentfiler.Digest.crc32c;
+
 @Component
 @Profile("itest")
 public class InMemoryBucketStorage implements BucketStorage {
@@ -32,12 +32,12 @@ public class InMemoryBucketStorage implements BucketStorage {
 	}
 
 	/// Neste kall til [#lesObjekt] for objektet kaster [DokarkivmellomlagerTechnicalException].
-	public void feilVedLesing(String objektnavn) {
+	public void genererLesefeil(String objektnavn) {
 		feilVedLesing.add(objektnavn);
 	}
 
 	/// Kall til [#fjernTemporaryHold] for objektet kaster [DokarkivmellomlagerTechnicalException].
-	public void feilVedFjerningAvHold(String objektnavn) {
+	public void genererFjernTemporaryHoldFeil(String objektnavn) {
 		feilVedFjerningAvHold.add(objektnavn);
 	}
 
@@ -47,17 +47,10 @@ public class InMemoryBucketStorage implements BucketStorage {
 		feilVedFjerningAvHold.clear();
 	}
 
-	public static byte[] crc32c(byte[] innhold) {
-		CRC32C crc32c = new CRC32C();
-		crc32c.update(innhold);
-		int verdi = (int) crc32c.getValue();
-		return new byte[]{(byte) (verdi >>> 24), (byte) (verdi >>> 16), (byte) (verdi >>> 8), (byte) verdi};
-	}
-
 	@Override
 	public Optional<BucketObjekt> hentMetadata(String objektnavn) {
 		return Optional.ofNullable(objekter.get(objektnavn))
-				.map(objekt -> new BucketObjekt(objektnavn, crc32c(objekt.innhold()), objekt.innhold().length, objekt.temporaryHold()));
+				.map(objekt -> new BucketObjekt(objektnavn, crc32c(objekt.innhold())));
 	}
 
 	@Override

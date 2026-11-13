@@ -24,7 +24,6 @@ import static jakarta.persistence.EnumType.STRING;
 import static no.nav.dokarkivpleie.domain.DokumentFilOpplastingTilstand.ARKIVERT;
 import static no.nav.dokarkivpleie.domain.DokumentFilOpplastingTilstand.FEILET;
 
-/// Opplasting av en dokumentfil til dokarkivmellomlager. Når tilstand er `ARKIVERING` skal filen arkiveres i [DokumentFil].
 @Entity
 @Builder
 @Getter
@@ -100,7 +99,6 @@ public class DokumentFilOpplasting {
 		endret(kildeNavn, LocalDateTime.now());
 	}
 
-	/// Øker antall forsøk. Setter tilstand til `FEILET` dersom `maksForsok` er nådd.
 	public void registrerFeiletForsok(int maksForsok, String kildeNavn) {
 		this.forsok++;
 		if (this.forsok >= maksForsok) {

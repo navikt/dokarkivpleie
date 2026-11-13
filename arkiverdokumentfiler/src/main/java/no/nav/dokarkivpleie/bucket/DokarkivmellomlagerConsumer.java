@@ -4,10 +4,11 @@ import no.nav.dokarkivpleie.arkiverdokumentfiler.DokumentFilIntegritetException;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
-import java.util.HexFormat;
 import java.util.UUID;
 import java.util.zip.CRC32C;
 import java.util.zip.CheckedInputStream;
+
+import static no.nav.dokarkivpleie.arkiverdokumentfiler.Digest.hex;
 
 @Component
 public class DokarkivmellomlagerConsumer {
@@ -32,14 +33,5 @@ public class DokarkivmellomlagerConsumer {
 
 	public void fjernTemporaryHold(String dokumentFilId) {
 		bucketStorage.fjernTemporaryHold(dokumentFilId);
-	}
-
-	public static byte[] crc32c(CheckedInputStream stream) {
-		int verdi = (int) stream.getChecksum().getValue();
-		return new byte[]{(byte) (verdi >>> 24), (byte) (verdi >>> 16), (byte) (verdi >>> 8), (byte) verdi};
-	}
-
-	private static String hex(byte[] bytes) {
-		return bytes == null ? "null" : HexFormat.of().formatHex(bytes);
 	}
 }

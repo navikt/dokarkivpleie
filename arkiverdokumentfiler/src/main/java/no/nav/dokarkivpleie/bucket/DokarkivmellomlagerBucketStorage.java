@@ -10,7 +10,6 @@ import java.nio.channels.Channels;
 import java.util.Base64;
 import java.util.Optional;
 
-/// [BucketStorage] mot Google Cloud Storage.
 public class DokarkivmellomlagerBucketStorage implements BucketStorage {
 
 	private final Storage storage;
@@ -58,8 +57,7 @@ public class DokarkivmellomlagerBucketStorage implements BucketStorage {
 	}
 
 	private static BucketObjekt tilBucketObjekt(Blob blob) {
-		byte[] crc32c = blob.getCrc32c() == null ? null : Base64.getDecoder().decode(blob.getCrc32c());
-		long antallBytes = blob.getSize() == null ? 0 : blob.getSize();
-		return new BucketObjekt(blob.getName(), crc32c, antallBytes, Boolean.TRUE.equals(blob.getTemporaryHold()));
+		byte[] crc32c = Base64.getDecoder().decode(blob.getCrc32c());
+		return new BucketObjekt(blob.getName(), crc32c);
 	}
 }

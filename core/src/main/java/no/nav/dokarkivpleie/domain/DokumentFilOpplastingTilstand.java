@@ -1,7 +1,7 @@
 package no.nav.dokarkivpleie.domain;
 
 public enum DokumentFilOpplastingTilstand {
-	LASTER_OPP,
+	UNDER_OPPLASTING,
 	LASTET_OPP,
 	ARKIVERES,
 	ARKIVERT,

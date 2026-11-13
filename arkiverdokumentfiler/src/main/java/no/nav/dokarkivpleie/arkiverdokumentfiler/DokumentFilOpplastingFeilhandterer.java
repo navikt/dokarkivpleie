@@ -12,7 +12,6 @@ import java.util.function.Consumer;
 import static no.nav.dokarkivpleie.arkiverdokumentfiler.DokumentFilArkiverer.KILDE;
 import static no.nav.dokarkivpleie.domain.DokumentFilOpplastingTilstand.ARKIVERES;
 
-/// Registrerer feil på en [DokumentFilOpplasting] i en egen transaksjon etter at arkiveringen er rullet tilbake.
 @Slf4j
 @Component
 public class DokumentFilOpplastingFeilhandterer {

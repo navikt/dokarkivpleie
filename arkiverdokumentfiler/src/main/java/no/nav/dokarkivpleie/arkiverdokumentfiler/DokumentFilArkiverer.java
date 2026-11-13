@@ -17,13 +17,16 @@ import java.io.IOException;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.zip.CheckedInputStream;
 
+import static no.nav.dokarkivpleie.arkiverdokumentfiler.ArkiverDokumentFilResultat.ALLEREDE_ARKIVERT;
+import static no.nav.dokarkivpleie.arkiverdokumentfiler.ArkiverDokumentFilResultat.ARKIVERT;
+import static no.nav.dokarkivpleie.arkiverdokumentfiler.ArkiverDokumentFilResultat.IKKE_TATT;
+import static no.nav.dokarkivpleie.arkiverdokumentfiler.Digest.crc32c;
 import static no.nav.dokarkivpleie.arkiverdokumentfiler.Digest.getSha256Instance;
-import static no.nav.dokarkivpleie.bucket.DokarkivmellomlagerConsumer.crc32c;
+import static no.nav.dokarkivpleie.arkiverdokumentfiler.Digest.hex;
 import static no.nav.dokarkivpleie.domain.DokumentFilOpplastingTilstand.ARKIVERES;
 
 @Slf4j
@@ -49,20 +52,16 @@ public class DokumentFilArkiverer {
 
 	@Transactional(propagation = Propagation.REQUIRES_NEW, timeoutString = "${dokarkivpleie.arkiverdokumentfiler.transaksjon-timeout}")
 	public ArkiverDokumentFilResultat arkiver(UUID dokumentFilId) {
-		return arkiverITransaksjon(dokumentFilId);
-	}
-
-	private ArkiverDokumentFilResultat arkiverITransaksjon(UUID dokumentFilId) {
 		Optional<DokumentFilOpplasting> laastOpplasting = dokumentFilOpplastingRepository.findAndLockByDokumentFilIdAndTilstand(dokumentFilId, ARKIVERES);
 		if (laastOpplasting.isEmpty()) {
-			return ArkiverDokumentFilResultat.ikkeTatt();
+			return IKKE_TATT;
 		}
 
 		DokumentFilOpplasting opplasting = laastOpplasting.get();
 		if (dokumentFilRepository.existsByFilUuid(dokumentFilId)) {
 			opplasting.arkivert(KILDE);
 			log.info("dokumentFilId={} finnes allerede som dokumentFil. Setter tilstand={}", dokumentFilId, opplasting.getTilstand());
-			return ArkiverDokumentFilResultat.alleredeArkivert();
+			return ALLEREDE_ARKIVERT;
 		}
 
 		if (opplasting.getAntallBytes() == null) {
@@ -81,7 +80,7 @@ public class DokumentFilArkiverer {
 
 			opplasting.arkivert(KILDE);
 			log.info("Arkiverte dokumentFilId={} som dokumentFil med id={}", dokumentFilId, dokumentFil.getDokumentFilId());
-			return ArkiverDokumentFilResultat.arkivert();
+			return ARKIVERT;
 		} catch (IOException e) {
 			throw new DokarkivmellomlagerTechnicalException("Lesing av dokumentFilId=%s fra dokarkivmellomlager feilet".formatted(dokumentFilId), e);
 		}
@@ -102,9 +101,4 @@ public class DokumentFilArkiverer {
 					.formatted(algoritme, dokumentFilId, hex(forventet), hex(faktisk)));
 		}
 	}
-
-	private static String hex(byte[] bytes) {
-		return bytes == null ? "null" : HexFormat.of().formatHex(bytes);
-	}
-
 }

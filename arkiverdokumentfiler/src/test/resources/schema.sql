@@ -8,7 +8,7 @@ create table joark.t_k_dokument_fil_opplasting_tilstand
     k_opplasting_tilstand varchar2(128 char) not null primary key
 );
 
-insert into joark.t_k_dokument_fil_opplasting_tilstand (k_opplasting_tilstand) values ('LASTER_OPP');
+insert into joark.t_k_dokument_fil_opplasting_tilstand (k_opplasting_tilstand) values ('UNDER_OPPLASTING');
 insert into joark.t_k_dokument_fil_opplasting_tilstand (k_opplasting_tilstand) values ('LASTET_OPP');
 insert into joark.t_k_dokument_fil_opplasting_tilstand (k_opplasting_tilstand) values ('ARKIVERES');
 insert into joark.t_k_dokument_fil_opplasting_tilstand (k_opplasting_tilstand) values ('ARKIVERT');
