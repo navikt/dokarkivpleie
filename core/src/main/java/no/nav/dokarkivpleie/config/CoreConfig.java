@@ -13,7 +13,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableConfigurationProperties(value = {
 		DokarkivpleieProperties.class,
 		NaisProperties.class,
-		SlackProperties.class
+		SlackProperties.class,
+		GoogleCloudProperties.class
 })
 @EnableScheduling
 @EnableResilientMethods

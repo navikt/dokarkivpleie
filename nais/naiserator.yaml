@@ -6,13 +6,20 @@ metadata:
 spec:
   env:
     - name: JDK_JAVA_OPTIONS
-      value: "-XX:MaxRAMPercentage=75"
+      value: "-XX:MaxRAMPercentage=75 
+              --enable-preview
+              $(JAVA_PROXY_OPTIONS)"
     - name: DOKARKIVPLEIE_ENDPOINTS_DATAVAREHUS_URL
       value: "{{DOKARKIVPLEIE_ENDPOINTS_DATAVAREHUS_URL}}"
     - name: DOKARKIVPLEIE_ENDPOINTS_PDL_URL
       value: "{{DOKARKIVPLEIE_ENDPOINTS_PDL_URL}}"
     - name: DOKARKIVPLEIE_ENDPOINTS_PDL_SCOPE
       value: "{{DOKARKIVPLEIE_ENDPOINTS_PDL_SCOPE}}"
+    - name: GOOGLE_APPLICATION_CREDENTIALS
+      value: "/var/run/secrets/nais_secrets/gcloud_serviceaccount.json"
+  filesFrom:
+    - secret: dokarkivpleie
+      mountPath: /var/run/secrets/nais_secrets
   envFrom:
     - configmap: dokarkivpleie
     - secret: dokarkivpleie
